@@ -1,0 +1,62 @@
+import mongoose, { Schema, Types } from "mongoose";
+
+export type UserType = {
+  _id: Types.ObjectId;
+  name: string;
+  email: string;
+  phone?: string;
+  image?: string;
+  role: "user" | "admin" | "seller";
+  isBlocked: boolean;
+
+  location?: {
+    type: "Point";
+    coordinates: [number, number];
+  };
+
+  refreshToken?: string;
+
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+const userSchema = new Schema<UserType>(
+  {
+    name: { type: String, required: true },
+
+    email: { type: String, required: true, unique: true },
+
+    phone: { type: String },
+
+    image: { type: String },
+
+    refreshToken: { type: String },
+
+    role: {
+      type: String,
+      enum: ["user", "admin", "seller"],
+      default: "user",
+    },
+
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
+
+    location: {
+      type: {
+        type: String,
+        enum: ["Point"],
+      },
+      coordinates: {
+        type: [Number],
+      },
+    },
+  },
+  { timestamps: true }
+);
+
+// 🔥 Geo index for location-based queries
+userSchema.index({ location: "2dsphere" });
+
+export const User = mongoose.model<UserType>("User", userSchema);
