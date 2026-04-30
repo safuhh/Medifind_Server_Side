@@ -1,29 +1,94 @@
-import mongoose, { Schema, Types } from "mongoose";
+import mongoose, { Schema, Types, Document } from "mongoose";
 
-export type SellerRequestType = {
+export interface ISellerRequest extends Document {
   userId: Types.ObjectId;
   shopName: string;
   licenseNumber: string;
   address: string;
   phone: string;
+
+  location: {
+    address: string;        // short name (ATM name etc)
+    fullAddress: string;    // full address (NEW)
+    lat: number | null;
+    lng: number | null;
+  };
+
   status: "pending" | "approved" | "rejected";
-};
-const sellerRequestSchema = new Schema<SellerRequestType>(
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const sellerRequestSchema = new Schema<ISellerRequest>(
   {
-    userId: { type: Schema.Types.ObjectId, required: true, ref: "User" },
-    shopName: { type: String, required: true },
-    licenseNumber: { type: String, required: true },
-    address: { type: String, required: true },
-    phone: { type: String, required: true },
+    userId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+      index: true,
+    },
+
+    shopName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    licenseNumber: {
+      type: String,
+      required: true,
+      trim: true,
+      unique: true,
+    },
+
+    address: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    phone: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    // 🔥 UPDATED LOCATION
+    location: {
+      address: {
+        type: String,
+        default: "",
+      },
+      fullAddress: {        // ✅ NEW FIELD
+        type: String,
+        default: "",
+      },
+      lat: {
+        type: Number,
+        default: null,
+      },
+      lng: {
+        type: Number,
+        default: null,
+      },
+    },
+
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],
       default: "pending",
+      index: true,
     },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+  }
 );
-export const SellerRequest = mongoose.model<SellerRequestType>(
-  "SellerRequest",
-  sellerRequestSchema,
-);
+
+// ✅ OPTIONAL GEO INDEX
+sellerRequestSchema.index({ "location.lat": 1, "location.lng": 1 });
+
+// Prevent model overwrite in dev
+export const SellerRequest =
+  mongoose.models.SellerRequest ||
+  mongoose.model<ISellerRequest>("SellerRequest", sellerRequestSchema);

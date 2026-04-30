@@ -19,11 +19,13 @@ export const protect = async (
       return res.status(401).json({ message: "Not authorized, no token" });
     }
 
+    // only decode userId (NO role)
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
       id: string;
     };
 
-    const user = await User.findById(decoded.id).select("-password");
+    // 🔥 ALWAYS fetch fresh user from DB
+    const user = await User.findById(decoded.id);
 
     if (!user) {
       return res.status(401).json({ message: "User not found" });
@@ -33,13 +35,13 @@ export const protect = async (
       return res.status(403).json({ message: "Account blocked by admin" });
     }
 
-
+    // 🔥 attach fresh DB user (latest role always)
     req.user = {
       _id: user._id,
       id: user._id.toString(),
       name: user.name,
       email: user.email,
-      role: user.role,
+      role: user.role, // ALWAYS updated
       isBlocked: user.isBlocked,
     } as any;
 
@@ -49,25 +51,18 @@ export const protect = async (
   }
 };
 
-
-
 export const authorizeRoles = (...roles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({ message: "Not authorized" });
-      }
-
-      // role check
-      if (!roles.includes(req.user.role)) {
-        return res.status(403).json({
-          message: `Access denied. Required role: ${roles.join(", ")}`,
-        });
-      }
-
-      next();
-    } catch (error) {
-      return res.status(500).json({ message: "Role check failed" });
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authorized" });
     }
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        message: `Access denied. Required role: ${roles.join(", ")}`,
+      });
+    }
+
+    next();
   };
 };
