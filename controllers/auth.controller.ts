@@ -41,7 +41,6 @@ export const googleAuth = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Google email not found" });
     }
 
-    // Find or create user
     let user = await User.findOne({ email });
 
     if (!user) {
@@ -53,19 +52,16 @@ export const googleAuth = async (req: Request, res: Response) => {
       });
     }
 
-    // Block check
     if (user.isBlocked) {
       return res.status(403).json({ message: "User blocked" });
     }
 
-    //  Generate tokens
     const newAccessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
     user.refreshToken = refreshToken;
     await user.save();
 
-    //  Cookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: false,

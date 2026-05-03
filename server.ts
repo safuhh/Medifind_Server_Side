@@ -11,7 +11,9 @@ import rateLimit from "express-rate-limit";
 import authRoutes from "./routes/auth.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import sellerRoutes from "./routes/seller.routes.js";
-
+import deliveryBoyRoutes from "./routes/deliveryBoy.routes.js";
+import deliveryAdminRoutes from "./routes/admin.deliveryBoy.routes.js";
+import sellerBlockRoutes from "./routes/sellerblock.routes.js";
 const app = express();
 
 app.use(helmet());
@@ -43,6 +45,9 @@ console.log("ADMIN ROUTES LOADED");
 app.use("/admin", adminRoutes);
 console.log("ADMIN ROUTES LOADED");
 app.use("/seller", sellerRoutes);
+app.use("/delivery", deliveryBoyRoutes);
+app.use("/admin/delivery", deliveryAdminRoutes);
+app.use("/admin/sellerblock", sellerBlockRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI as string)

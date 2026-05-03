@@ -6,7 +6,7 @@ export type UserType = {
   email: string;
   phone?: string;
   image?: string;
-  role: "user" | "admin" | "seller";
+  role: "user" | "admin" | "seller"| "delivery_boy";
   isBlocked: boolean;
 
   location?: {
@@ -34,7 +34,7 @@ const userSchema = new Schema<UserType>(
 
     role: {
       type: String,
-      enum: ["user", "admin", "seller"],
+      enum: ["user", "admin", "seller", "delivery_boy"],
       default: "user",
     },
 

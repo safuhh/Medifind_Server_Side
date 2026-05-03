@@ -8,7 +8,6 @@ import {
 import { protect , authorizeRoles} from "../middleware/auth.middleware.js";
 
 const router = Router();
-console.log("✅ admin.routes.ts loaded");
 router.get("/seller-requests", protect, authorizeRoles("admin"), getSellerRequests);
 router.put("/approve/:requestId", protect, authorizeRoles("admin"), approveseller);
 router.put("/reject/:requestId", rejectSeller);

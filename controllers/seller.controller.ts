@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { User } from "../models/user.model.js";
 import { SellerRequest } from "../models/sellerRequest.model.js";
 import { getAddressFromCoords } from "../utils/geocode.js";
-import { AuthRequest } from "../types/authRequest.js";
 
 export const applyseller = async (req: any, res: Response) => {
   try {
@@ -12,6 +11,16 @@ export const applyseller = async (req: any, res: Response) => {
       return res.status(401).json({ message: "Unauthorized user" });
     }
 
+    const user = await User.findById(userId); 
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (user.role === "admin" || user.role === "delivery_boy") {
+  return res.status(403).json({
+    message: "Admins and delivery boys cannot apply for seller",
+  });
+}
     const { shopName, licenseNumber, address, phone, lat, lng } = req.body;
 
     const existing = await SellerRequest.findOne({ userId });

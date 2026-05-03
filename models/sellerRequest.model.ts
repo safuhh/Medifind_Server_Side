@@ -8,8 +8,8 @@ export interface ISellerRequest extends Document {
   phone: string;
 
   location: {
-    address: string;        // short name (ATM name etc)
-    fullAddress: string;    // full address (NEW)
+    address: string;        
+    fullAddress: string;    
     lat: number | null;
     lng: number | null;
   };
@@ -53,13 +53,13 @@ const sellerRequestSchema = new Schema<ISellerRequest>(
       trim: true,
     },
 
-    // 🔥 UPDATED LOCATION
+  
     location: {
       address: {
         type: String,
         default: "",
       },
-      fullAddress: {        // ✅ NEW FIELD
+      fullAddress: {       
         type: String,
         default: "",
       },
@@ -85,10 +85,8 @@ const sellerRequestSchema = new Schema<ISellerRequest>(
   }
 );
 
-// ✅ OPTIONAL GEO INDEX
 sellerRequestSchema.index({ "location.lat": 1, "location.lng": 1 });
 
-// Prevent model overwrite in dev
 export const SellerRequest =
   mongoose.models.SellerRequest ||
   mongoose.model<ISellerRequest>("SellerRequest", sellerRequestSchema);
