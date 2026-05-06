@@ -2,7 +2,6 @@ import { User } from "../models/user.model.js";
 import { Response } from "express";
 import { AuthRequest } from "../types/authRequest.js";
 
-// 🟢 GET SELLERS
 export const getAllSellers = async (req: AuthRequest, res: Response) => {
   try {
     const sellers = await User.find({ role: "seller" }).select("-password");
@@ -20,7 +19,6 @@ export const getAllSellers = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// 🔴 BLOCK SELLER
 export const blockSeller = async (req: AuthRequest, res: Response) => {
   try {
     const seller = await User.findByIdAndUpdate(
@@ -49,7 +47,6 @@ export const blockSeller = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// 🟢 UNBLOCK SELLER
 export const unblockSeller = async (req: AuthRequest, res: Response) => {
   try {
     const seller = await User.findByIdAndUpdate(

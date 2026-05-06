@@ -62,7 +62,7 @@ export const googleAuth = async (req: Request, res: Response) => {
     user.refreshToken = refreshToken;
     await user.save();
 
-    res.cookie("refreshToken", refreshToken, {
+    res.cookie("refreshToken", refreshToken, {  
       httpOnly: true,
       secure: false,
       sameSite: "lax",

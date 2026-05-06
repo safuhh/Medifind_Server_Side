@@ -6,7 +6,7 @@ import { User } from "../models/user.model.js";
 export const protect = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     let token: string | undefined;
@@ -19,12 +19,11 @@ export const protect = async (
       return res.status(401).json({ message: "Not authorized, no token" });
     }
 
-    // only decode userId (NO role)
+    // only decode userId
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
       id: string;
     };
 
-    // 🔥 ALWAYS fetch fresh user from DB
     const user = await User.findById(decoded.id);
 
     if (!user) {
@@ -35,13 +34,12 @@ export const protect = async (
       return res.status(403).json({ message: "Account blocked by admin" });
     }
 
-    // 🔥 attach fresh DB user (latest role always)
     req.user = {
       _id: user._id,
       id: user._id.toString(),
       name: user.name,
       email: user.email,
-      role: user.role, // ALWAYS updated
+      role: user.role,
       isBlocked: user.isBlocked,
     } as any;
 
@@ -58,8 +56,13 @@ export const authorizeRoles = (...roles: string[]) => {
     }
 
     if (!roles.includes(req.user.role)) {
+      console.log(
+        `>>> Access Denied for role: ${req.user.role}. Required: ${roles.join(", ")}`,
+      );
       return res.status(403).json({
+        success: false,
         message: `Access denied. Required role: ${roles.join(", ")}`,
+        currentRole: req.user.role,
       });
     }
 

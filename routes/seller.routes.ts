@@ -13,5 +13,5 @@ const router = Router();
 router.post("/apply", protect, applyseller);
 router.get("/dashboard", protect, authorizeRoles("seller"), sellerDashboard);
 router.put("/update", protect, authorizeRoles("seller"), updateSellerInfo);
-router.get("/current", protect, authorizeRoles("seller"), getCurrentSellerInfo);
+router.get("/current", protect, getCurrentSellerInfo);
 export default router;

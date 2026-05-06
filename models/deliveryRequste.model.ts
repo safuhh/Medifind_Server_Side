@@ -76,7 +76,6 @@ const deliveryBoySchema = new Schema<IDeliveryBoy>(
       trim: true,
     },
 
-    // 📍 SIMPLE LOCATION (lat/lng)
     location: {
       address: {
         type: String,
@@ -96,7 +95,6 @@ const deliveryBoySchema = new Schema<IDeliveryBoy>(
       },
     },
 
-    // 🪪 KYC
     kyc: {
       aadhaarNumber: {
         type: String,
@@ -140,6 +138,11 @@ const deliveryBoySchema = new Schema<IDeliveryBoy>(
     timestamps: true,
   }
 );
+
+deliveryBoySchema.index({ isOnline: 1, isAvailable: 1 });
+deliveryBoySchema.index({ "location.lat": 1, "location.lng": 1 });
+deliveryBoySchema.index({ phone: 1 });
+deliveryBoySchema.index({ createdAt: -1 });
 
 export const DeliveryBoy =
   mongoose.models.DeliveryBoy ||

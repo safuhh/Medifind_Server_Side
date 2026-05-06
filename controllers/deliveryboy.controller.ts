@@ -44,7 +44,6 @@ export const applyDeliveryBoy = async (req: AuthRequest, res: Response) => {
       lng,
     } = req.body;
 
-    // 🔥 prevent duplicate request
     const existing = await DeliveryBoy.findOne({ userId });
 
     if (existing) {
@@ -53,7 +52,6 @@ export const applyDeliveryBoy = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // 🔥 vehicle uniqueness
     const vehicleExists = await DeliveryBoy.findOne({ vehicleNumber });
 
     if (vehicleExists) {

@@ -86,6 +86,9 @@ const sellerRequestSchema = new Schema<ISellerRequest>(
 );
 
 sellerRequestSchema.index({ "location.lat": 1, "location.lng": 1 });
+sellerRequestSchema.index({ shopName: 1 });
+sellerRequestSchema.index({ phone: 1 });
+sellerRequestSchema.index({ createdAt: -1 });
 
 export const SellerRequest =
   mongoose.models.SellerRequest ||

@@ -68,33 +68,63 @@ export const applyseller = async (req: any, res: Response) => {
 
 
 
+import { Medicine } from "../models/medicine.model.js";
+
+import mongoose from "mongoose";
+
 export const sellerDashboard = async (req: any, res: Response) => {
   try {
     const userId = req.user?.id;
-
     if (!userId) {
       return res.status(401).json({ message: "User not found in token" });
     }
 
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    if (user.role !== "seller") {
-      return res.status(403).json({ message: "Not a seller" });
-    }
+    const sellerObjectId = new mongoose.Types.ObjectId(userId);
+    console.log(">>> DASHBOARD_QUERY. SellerID:", userId);
 
     const sellerinfo = await SellerRequest.findOne({ userId });
-
     if (!sellerinfo) {
       return res.status(404).json({ message: "Seller info not found" });
     }
 
-    res.json({ sellerinfo });
+    // 🔥 Count total unique medicine documents for this seller
+    const totalProducts = await Medicine.countDocuments({ 
+      sellerId: sellerObjectId, 
+      isActive: { $ne: false } 
+    });
+
+    // 🔥 Count products that have 0 or negative stock
+    const outOfStockCount = await Medicine.countDocuments({ 
+      sellerId: sellerObjectId, 
+      isActive: { $ne: false },
+      stock: { $lte: 0 }
+    });
+
+    // 🔥 Calculate total physical units across all medicines
+    const stockStats = await Medicine.aggregate([
+      { $match: { sellerId: sellerObjectId, isActive: { $ne: false } } },
+      { $group: { _id: null, totalStock: { $sum: "$stock" } } }
+    ]);
+    const totalStock = stockStats.length > 0 ? stockStats[0].totalStock : 0;
+
+    // 🔥 Get products that are running low (between 1 and 9 units)
+    const lowStockProducts = await Medicine.find({
+      sellerId: sellerObjectId,
+      isActive: { $ne: false },
+      stock: { $gt: 0, $lt: 10 }
+    }).select("name stock").limit(10).lean();
+
+    console.log(`>>> DASHBOARD_STATS. Products: ${totalProducts}, Stock: ${totalStock}, Low: ${lowStockProducts.length}`);
+
+    res.json({ 
+      sellerinfo,
+      totalProducts,
+      totalStock,
+      outOfStockCount,
+      lowStockProducts
+    });
   } catch (error) {
-    console.log(error);
+    console.error(">>> DASHBOARD_ERROR:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
@@ -151,24 +181,22 @@ export const updateSellerInfo = async (req: any, res: Response) => {
 
 export const getCurrentSellerInfo = async (req: any, res: Response) => {
   try {
-    console.log("USER:", req.user);
-
     const userId = req.user?.id;
+    console.log(">>> BARCODE_LOOKUP_HIT. UserID:", userId);
 
-    const seller = await SellerRequest.findOne({ userId });
-
-    console.log("SELLER FOUND:", seller);
-
-    if (!seller) {
-      return res.status(404).json({
-        message: "No seller request found for this user",
-      });
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "No user ID in request" });
     }
 
-    return res.json(seller);
+    const seller = await SellerRequest.findOne({ userId }).lean();
 
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Server error" });
+    console.log(">>> SELLER_FOUND_IN_DB:", seller ? seller.shopName : "NONE");
+
+    // Return 200 even if null, so the frontend doesn't throw an Axios 404 error
+    return res.status(200).json({ success: true, seller: seller || null });
+
+  } catch (err: any) {
+    console.error(">>> GET_CURRENT_SELLER_ERROR:", err);
+    return res.status(500).json({ success: false, message: err.message });
   }
 };

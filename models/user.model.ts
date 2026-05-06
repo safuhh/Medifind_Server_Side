@@ -6,7 +6,7 @@ export type UserType = {
   email: string;
   phone?: string;
   image?: string;
-  role: "user" | "admin" | "seller"| "delivery_boy";
+  role: "user" | "admin" | "seller"| "delivery_boy" | "doctor";
   isBlocked: boolean;
 
   location?: {
@@ -34,7 +34,7 @@ const userSchema = new Schema<UserType>(
 
     role: {
       type: String,
-      enum: ["user", "admin", "seller", "delivery_boy"],
+      enum: ["user", "admin", "seller", "delivery_boy", "doctor"],
       default: "user",
     },
 
@@ -56,7 +56,9 @@ const userSchema = new Schema<UserType>(
   { timestamps: true }
 );
 
-// 🔥 Geo index for location-based queries
 userSchema.index({ location: "2dsphere" });
+userSchema.index({ role: 1 });
+userSchema.index({ isBlocked: 1 });
+userSchema.index({ createdAt: -1 });
 
 export const User = mongoose.model<UserType>("User", userSchema);
