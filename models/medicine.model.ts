@@ -111,7 +111,6 @@ medicineSchema.index({ manufacturer: 1 });
 medicineSchema.index({ isActive: 1 });
 medicineSchema.index({ name: "text", brand: "text", category: "text", manufacturer: "text" });
 medicineSchema.index({ createdAt: -1 });
-medicineSchema.index({ barcode: 1 });
 
 export const Medicine = mongoose.models.Medicine || mongoose.model<MedicineType>(
   "Medicine",

@@ -39,10 +39,11 @@ export const applyDeliveryBoy = async (req: AuthRequest, res: Response) => {
       vehicleNumber,
       address,
       aadhaarNumber,
-      aadhaarImage,
       lat,
       lng,
     } = req.body;
+    
+    const aadhaarImage = req.file ? req.file.path : req.body.aadhaarImage;
 
     const existing = await DeliveryBoy.findOne({ userId });
 

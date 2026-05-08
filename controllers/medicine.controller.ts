@@ -4,6 +4,14 @@ import { SellerRequest } from "../models/sellerRequest.model.js";
 import { calculateDistance } from "../utils/geocode.js";
 import axios from "axios";
 
+const safeJsonParse = (str: string) => {
+    try {
+        return str && typeof str === "string" ? JSON.parse(str) : str;
+    } catch (e) {
+        return null;
+    }
+};
+
 export const getAllMedicines = async (req: Request, res: Response) => {
   try {
     const { search, lat, lng } = req.query;
@@ -94,24 +102,17 @@ export const createMedicine = async (req: any, res: any) => {
   try {
     const { name, brand, category, unitWeight, manufacturer, stock, pricing, description, barcode, existingImageUrls } = req.body;
     
-    let parsedPricing = { mrp: 0, sellingPrice: 0, offer: "" };
-    if (pricing) {
-       parsedPricing = typeof pricing === 'string' ? JSON.parse(pricing) : pricing;
-    }
-    
+    const parsedPricing = safeJsonParse(pricing) || { mrp: 0, sellingPrice: 0, offer: "" };
     let images: string[] = [];
     
-    // Add external image URLs if provided
-    if (existingImageUrls) {
-      const urls = typeof existingImageUrls === 'string' ? JSON.parse(existingImageUrls) : existingImageUrls;
-      if (Array.isArray(urls)) {
+    const urls = safeJsonParse(existingImageUrls);
+    if (Array.isArray(urls)) {
         images = [...urls];
-      }
     }
 
     // Add uploaded file images
     if (req.files && (req.files as any[]).length > 0) {
-      const fileImages = (req.files as any[]).map((file) => file.filename);
+      const fileImages = (req.files as any[]).map((file) => file.path);
       images = [...images, ...fileImages];
     }
     
@@ -167,25 +168,16 @@ export const updateMedicine = async (req: any, res: any) => {
     const { id } = req.params;
     const { name, brand, category, unitWeight, manufacturer, stock, pricing, description, barcode, existingImages } = req.body;
     
-    let parsedPricing;
-    if (pricing) {
-       parsedPricing = typeof pricing === 'string' ? JSON.parse(pricing) : pricing;
-    }
-    
+    const parsedPricing = safeJsonParse(pricing);
     let updatedImages: string[] = [];
     
-    // 1. Add existing images (if any)
     if (existingImages) {
-      if (Array.isArray(existingImages)) {
-        updatedImages = [...existingImages];
-      } else {
-        updatedImages = [existingImages];
-      }
+      updatedImages = Array.isArray(existingImages) ? [...existingImages] : [existingImages];
     }
     
     // 2. Add new uploaded files
     if (req.files && (req.files as any[]).length > 0) {
-      const newFiles = (req.files as any[]).map((file) => file.filename);
+      const newFiles = (req.files as any[]).map((file) => file.path);
       updatedImages = [...updatedImages, ...newFiles];
     }
     
@@ -236,7 +228,6 @@ export const deleteMedicine = async (req: any, res: any) => {
 export const getMedicineByBarcode = async (req: Request, res: Response) => {
   try {
     const { barcode } = req.params;
-    console.log(">>> ENHANCED_BARCODE_LOOKUP:", barcode);
     if (!barcode) return res.status(400).json({ success: false, message: "Barcode is required" });
 
     // 1. Check local database first

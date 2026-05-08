@@ -10,9 +10,10 @@ export const getAddressFromCoords = async (lat: number, lng: number) => {
         format: "json",
       },
       headers: {
-        "User-Agent": "medifind-app/1.0",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept-Language": "en"
       },
-      timeout: 5000,
+      timeout: 8000,
     });
 
     const data = res.data;
@@ -23,17 +24,16 @@ export const getAddressFromCoords = async (lat: number, lng: number) => {
       return { shortName: "Unknown location", fullAddress: "Address not found" };
     }
 
-    const shortName =
-      data.name ||
-      data.address?.amenity ||
-      data.address?.shop ||
-      data.address?.tourism ||
-      data.address?.building ||
-      data.address?.road ||
-      data.address?.village ||
-      data.address?.town ||
-      data.address?.city ||
-      "Unknown place";
+    const addr = data.address || {};
+    const city = addr.city || addr.town || addr.village || addr.suburb || "";
+    const district = addr.state_district || addr.city_district || "";
+    
+    let shortName = city;
+    if (city && district && district !== city) {
+      shortName = `${city}, ${district}`;
+    } else if (!city) {
+      shortName = addr.road || addr.building || data.name || "Unknown place";
+    }
 
     return {
       shortName,

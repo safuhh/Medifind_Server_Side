@@ -5,6 +5,14 @@ import { User } from "../models/user.model.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { doctorApplicationSchema } from "../validators/doctor.validator.js";
 
+const safeJsonParse = (str: string) => {
+    try {
+        return str && typeof str === "string" ? JSON.parse(str) : str;
+    } catch (e) {
+        return null;
+    }
+};
+
 export const applyDoctor = async (req: any, res: Response) => {
   try {
     const userId = req.user?.id;
@@ -28,28 +36,13 @@ export const applyDoctor = async (req: any, res: Response) => {
     let bodyData = { ...req.body };
     console.log(">>> Body Data Received:", JSON.stringify(bodyData, null, 2));
 
-    let parsedLocation = bodyData.location;
-    let parsedQualification = bodyData.qualification;
+    const parsedLocation = safeJsonParse(bodyData.location);
+    const parsedQualification = safeJsonParse(bodyData.qualification);
 
-    try {
-      if (typeof parsedLocation === "string")
-        parsedLocation = JSON.parse(parsedLocation);
-      if (typeof parsedQualification === "string")
-        parsedQualification = JSON.parse(parsedQualification);
-        
-      if (parsedLocation && Array.isArray(parsedLocation.coordinates)) {
+    if (parsedLocation && Array.isArray(parsedLocation.coordinates)) {
         parsedLocation.coordinates = parsedLocation.coordinates.map((c: any) => {
             const num = Number(c);
             return isNaN(num) ? 0 : num;
-        });
-      }
-    } catch (parseErr) {
-      console.error("JSON Parse Error:", parseErr);
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Invalid JSON in location or qualification",
         });
     }
 
@@ -108,16 +101,16 @@ export const applyDoctor = async (req: any, res: Response) => {
         degree: parsedQualification?.degree || "N/A",
         collegeName: parsedQualification?.collegeName || "N/A",
         university: parsedQualification?.university || "N/A",
-        certificateUrl: `/uploads/${certificateFile.filename}`,
+        certificateUrl: certificateFile.path,
       },
       registrationNumber: registrationNumber || "N/A",
       medicalCouncil: medicalCouncil || "N/A",
       experienceYears: isNaN(Number(experienceYears)) ? 0 : Number(experienceYears),
       specialization: specialization || "General Physician",
       profileImage: uploadedProfileFile 
-        ? `/uploads/${uploadedProfileFile.filename}` 
+        ? uploadedProfileFile.path 
         : (profileImage || user?.image || "https://api.dicebear.com/7.x/avataaars/svg?seed=doctor"),
-      selfieWithId: selfieFile ? `/uploads/${selfieFile.filename}` : undefined,
+      selfieWithId: selfieFile ? selfieFile.path : undefined,
       consultationFee: isNaN(Number(consultationFee)) ? 0 : Number(consultationFee),
       status: "pending",
     };
@@ -296,19 +289,8 @@ export const reviewDoctorApplication = async (
 export const getDoctorsBySpecialization = async (req: Request, res: Response) => {
   try {
     const { specialization } = req.query;
-    console.log(">>> QUERY RECEIVED:", req.query);
-    console.log(">>> Fetching doctors for specialization:", specialization);
-    
-    // Temporarily removing status filter to see if any doctors exist
     const query = specialization ? { specialization } : {};
-    console.log(">>> Mongoose Query:", JSON.stringify(query));
-
     const doctors = await DoctorApplication.find(query).populate("userId", "-password");
-
-    console.log(`>>> Total doctors found in DB: ${doctors.length}`);
-    doctors.forEach((d, i) => {
-      console.log(`>>> Doctor ${i}: ${d.fullName} | Status: ${d.status} | Spec: ${d.specialization}`);
-    });
     
     res.json({ success: true, doctors });
   } catch (error: any) {
@@ -349,12 +331,8 @@ export const updateDoctorProfile = async (req: any, res: Response) => {
     let parsedLocation = bodyData.location;
     let parsedQualification = bodyData.qualification;
 
-    try {
-      if (typeof parsedLocation === "string" && parsedLocation !== "undefined") parsedLocation = JSON.parse(parsedLocation);
-      if (typeof parsedQualification === "string" && parsedQualification !== "undefined") parsedQualification = JSON.parse(parsedQualification);
-    } catch (parseErr) {
-      console.log("Parse error in updateDoctorProfile:", parseErr);
-    }
+    parsedLocation = safeJsonParse(parsedLocation);
+    parsedQualification = safeJsonParse(parsedQualification);
 
     const {
       fullName,
@@ -364,6 +342,8 @@ export const updateDoctorProfile = async (req: any, res: Response) => {
       experienceYears,
       specialization,
       consultationFee,
+      registrationNumber,
+      medicalCouncil
     } = bodyData;
 
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
@@ -378,6 +358,16 @@ export const updateDoctorProfile = async (req: any, res: Response) => {
     if (specialization) doctor.specialization = specialization;
     if (consultationFee !== undefined) doctor.consultationFee = Number(consultationFee);
     
+    if (registrationNumber && registrationNumber !== doctor.registrationNumber) {
+        const regExists = await DoctorApplication.findOne({ registrationNumber, userId: { $ne: userId } });
+        if (regExists) {
+            return res.status(400).json({ success: false, message: "Registration number already used by another doctor" });
+        }
+        doctor.registrationNumber = registrationNumber;
+    }
+    
+    if (medicalCouncil) doctor.medicalCouncil = medicalCouncil;
+    
     if (parsedLocation && parsedLocation.coordinates) {
         doctor.location = parsedLocation;
     }
@@ -387,12 +377,12 @@ export const updateDoctorProfile = async (req: any, res: Response) => {
             degree: parsedQualification.degree || doctor.qualification.degree,
             collegeName: parsedQualification.collegeName || doctor.qualification.collegeName,
             university: parsedQualification.university || doctor.qualification.university,
-            certificateUrl: doctor.qualification.certificateUrl // Don't allow updating certificate URL easily here
+            certificateUrl: doctor.qualification.certificateUrl
         };
     }
 
     if (uploadedProfileFile) {
-        doctor.profileImage = `/uploads/${uploadedProfileFile.filename}`;
+        doctor.profileImage = uploadedProfileFile.path;
     }
 
     await doctor.save({ validateBeforeSave: false });
