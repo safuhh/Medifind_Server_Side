@@ -2,7 +2,8 @@ import { Request, Response } from "express";
 import { User } from "../models/user.model.js";
 import { SellerRequest } from "../models/sellerRequest.model.js";
 import { getAddressFromCoords } from "../utils/geocode.js";
-
+import { Medicine } from "../models/medicine.model.js";
+import mongoose from "mongoose";
 export const applyseller = async (req: any, res: Response) => {
   try {
     const userId = req.user?.id;
@@ -16,9 +17,9 @@ export const applyseller = async (req: any, res: Response) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    if (user.role === "admin" || user.role === "delivery_boy") {
+    if (user.role === "admin" || user.role === "delivery_boy" || user.role === "doctor") {
   return res.status(403).json({
-    message: "Admins and delivery boys cannot apply for seller",
+    message: "Admins,doctors and delivery boys cannot apply for seller",
   });
 }
     const { shopName, licenseNumber, address, phone, lat, lng } = req.body;
@@ -68,9 +69,7 @@ export const applyseller = async (req: any, res: Response) => {
 
 
 
-import { Medicine } from "../models/medicine.model.js";
 
-import mongoose from "mongoose";
 
 export const sellerDashboard = async (req: any, res: Response) => {
   try {
@@ -87,27 +86,27 @@ export const sellerDashboard = async (req: any, res: Response) => {
       return res.status(404).json({ message: "Seller info not found" });
     }
 
-    // 🔥 Count total unique medicine documents for this seller
+    //  Count total unique medicine documents for this seller
     const totalProducts = await Medicine.countDocuments({ 
       sellerId: sellerObjectId, 
       isActive: { $ne: false } 
     });
 
-    // 🔥 Count products that have 0 or negative stock
+    // Count products that have 0 or negative stock
     const outOfStockCount = await Medicine.countDocuments({ 
       sellerId: sellerObjectId, 
       isActive: { $ne: false },
       stock: { $lte: 0 }
     });
 
-    // 🔥 Calculate total physical units across all medicines
+    //  Calculate total physical units across all medicines
     const stockStats = await Medicine.aggregate([
       { $match: { sellerId: sellerObjectId, isActive: { $ne: false } } },
       { $group: { _id: null, totalStock: { $sum: "$stock" } } }
     ]);
     const totalStock = stockStats.length > 0 ? stockStats[0].totalStock : 0;
 
-    // 🔥 Get products that are running low (between 1 and 9 units)
+    //  Get products that are running low (between 1 and 9 units)
     const lowStockProducts = await Medicine.find({
       sellerId: sellerObjectId,
       isActive: { $ne: false },
@@ -124,7 +123,7 @@ export const sellerDashboard = async (req: any, res: Response) => {
       lowStockProducts
     });
   } catch (error) {
-    console.error(">>> DASHBOARD_ERROR:", error);
+    console.error(" DASHBOARD_ERROR:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
@@ -182,7 +181,6 @@ export const updateSellerInfo = async (req: any, res: Response) => {
 export const getCurrentSellerInfo = async (req: any, res: Response) => {
   try {
     const userId = req.user?.id;
-    console.log(">>> BARCODE_LOOKUP_HIT. UserID:", userId);
 
     if (!userId) {
       return res.status(401).json({ success: false, message: "No user ID in request" });
@@ -190,13 +188,13 @@ export const getCurrentSellerInfo = async (req: any, res: Response) => {
 
     const seller = await SellerRequest.findOne({ userId }).lean();
 
-    console.log(">>> SELLER_FOUND_IN_DB:", seller ? seller.shopName : "NONE");
+    console.log(" SELLER_FOUND_IN_DB:", seller ? seller.shopName : "NONE");
 
     // Return 200 even if null, so the frontend doesn't throw an Axios 404 error
     return res.status(200).json({ success: true, seller: seller || null });
 
   } catch (err: any) {
-    console.error(">>> GET_CURRENT_SELLER_ERROR:", err);
+    console.error(" GET_CURRENT_SELLER_ERROR:", err);
     return res.status(500).json({ success: false, message: err.message });
   }
 };

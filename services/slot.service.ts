@@ -41,7 +41,7 @@ export const getAvailblitySlots = async (
         )
         : [];
 
-    const allBaseSlots = [...morningSlots, ...eveningSlots];
+    const allBaseSlots = Array.from(new Set([...morningSlots, ...eveningSlots]));
 
     // Filter out past slots if the date is today
     const isToday = dayjs(date).isSame(dayjs(), "day");
@@ -69,7 +69,8 @@ export const getAvailblitySlots = async (
     const bookedSlots = await DoctorBooking.find({
         doctorId,
         date: dayjs(date).startOf("day").toDate(),
-        status: { $ne: "cancelled" }
+        status: { $ne: "cancelled" },
+        paymentStatus: "paid"
     }).select("timeSlot");
 
     const bookedTimeSlots = bookedSlots.map(booking => booking.timeSlot);

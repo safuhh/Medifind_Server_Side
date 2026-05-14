@@ -6,7 +6,14 @@ import {
   applyDeliveryBoySchema,
   updateDeliveryBoySchema,
 } from "../validations/deliveryBoy.validation.js";
-import { User } from "../models/user.model.js"; 
+import { User } from "../models/user.model.js";
+import { Order } from "../models/order.model.js";
+import { SellerRequest } from "../models/sellerRequest.model.js";
+import Stripe from "stripe";
+
+const stripe = new Stripe(
+  process.env.STRIPE_SECRET_KEY || "sk_test_placeholder",
+);
 
 export const applyDeliveryBoy = async (req: AuthRequest, res: Response) => {
   try {
@@ -21,16 +28,20 @@ export const applyDeliveryBoy = async (req: AuthRequest, res: Response) => {
       return res.status(401).json({ message: "Unauthorized user" });
     }
 
-    const user = await User.findById(userId); 
+    const user = await User.findById(userId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    if (user.role === "admin" || user.role === "seller") {
-  return res.status(403).json({
-    message: "Admins and Sellers cannot apply for Delivery Boy",
-  });
-}
+    if (
+      user.role === "admin" ||
+      user.role === "seller" ||
+      user.role === "doctor"
+    ) {
+      return res.status(403).json({
+        message: "Admins,sellers and doctors cannot apply for Delivery Boy",
+      });
+    }
 
     const {
       name,
@@ -42,7 +53,7 @@ export const applyDeliveryBoy = async (req: AuthRequest, res: Response) => {
       lat,
       lng,
     } = req.body;
-    
+
     const aadhaarImage = req.file ? req.file.path : req.body.aadhaarImage;
 
     const existing = await DeliveryBoy.findOne({ userId });
@@ -99,48 +110,12 @@ export const applyDeliveryBoy = async (req: AuthRequest, res: Response) => {
       message: "Delivery Boy request submitted successfully",
       deliveryBoy,
     });
-
   } catch (error) {
     console.log("ERROR:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
 
-export const deliveryBoyDashboard = async (req: any, res: Response) => {
-  try {
-    const userId = req.user?.id;
-
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized user" });
-    }
-
-    if (req.user.role !== "delivery_boy") {
-      return res.status(403).json({ message: "Not a delivery boy" });
-    }
-
-    const deliveryBoy = await DeliveryBoy.findOne({ userId }).populate(
-      "currentOrderId",
-    );
-
-    if (!deliveryBoy) {
-      return res.status(404).json({ message: "Delivery Boy not found" });
-    }
-
-    if (deliveryBoy.status !== "approved") {
-      return res.status(403).json({
-        message: "Your account is not approved yet",
-      });
-    }
-
-    return res.json({
-      deliveryBoy,
-      message: "Dashboard loaded",
-    });
-  } catch (error) {
-    console.log("ERROR:", error);
-    return res.status(500).json({ message: "Server error" });
-  }
-};
 
 export const updateDeliveryBoyInfo = async (req: any, res: Response) => {
   try {
@@ -211,14 +186,51 @@ export const getcurrentDeliveryBoyInfo = async (
       return res.status(403).json({ message: "Not a delivery boy" });
     }
 
-    const deliveryBoy = await DeliveryBoy.findOne({ userId });
+    const deliveryBoy = await DeliveryBoy.findOne({ userId })
+      .populate({
+        path: "currentOrderId",
+        populate: [
+          { path: "deliveryDetailsId" },
+          { path: "userId", select: "name email phone location" },
+          { path: "items.medicineId" },
+          {
+            path: "items.sellerId",
+            model: "User",
+            select: "name phone location",
+          },
+        ],
+      })
+      .lean();
 
     if (!deliveryBoy) {
       return res.status(404).json({ message: "Delivery Boy not found" });
     }
+
+    if (deliveryBoy.currentOrderId) {
+      const order = deliveryBoy.currentOrderId as any;
+      if (order.items) {
+        for (const item of order.items) {
+          if (item.sellerId && item.sellerId._id) {
+            const sellerReq = await SellerRequest.findOne({
+              userId: item.sellerId._id,
+            }).lean();
+            if (sellerReq) {
+              item.sellerShop = {
+                shopName: sellerReq.shopName,
+                address: sellerReq.address,
+                phone: sellerReq.phone,
+                location: sellerReq.location,
+              };
+            }
+          }
+        }
+      }
+    }
+
     return res.json({ deliveryBoy });
   } catch (error) {
     console.log("ERROR:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
+

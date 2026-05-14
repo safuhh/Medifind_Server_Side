@@ -1,10 +1,10 @@
 import express from "express";
 import {
   applyDeliveryBoy,
-  deliveryBoyDashboard,
   updateDeliveryBoyInfo,
-  getcurrentDeliveryBoyInfo
-} from "../controllers/deliveryboy.controller.js";
+  getcurrentDeliveryBoyInfo,
+} from "../controllers/deliveryBoy.controller.js";
+import { getearnings } from "../controllers/deliveryboyEarnings.controller.js";
 
 import { protect, authorizeRoles } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/upload.js";
@@ -15,18 +15,18 @@ router.post("/apply", protect, upload.single("aadhaarImage"), applyDeliveryBoy);
 
 router.get("/current", protect, getcurrentDeliveryBoyInfo);
 
-router.get(
-  "/dashboard",
-  protect,
-  authorizeRoles("delivery_boy"),
-  deliveryBoyDashboard
-);
-
 router.put(
   "/update",
   protect,
   authorizeRoles("delivery_boy"),
   updateDeliveryBoyInfo
+);
+
+router.get(
+  "/earnings",
+  protect,
+  authorizeRoles("delivery_boy"),
+  getearnings
 );
 
 export default router;

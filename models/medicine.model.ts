@@ -17,6 +17,7 @@ export interface MedicineType extends Document {
   manufacturer: string;
 
   isPrescriptionRequired: boolean;
+  visibility: "public" | "restricted";
 
   pricing: {
     mrp: number;
@@ -26,7 +27,7 @@ export interface MedicineType extends Document {
     gst?: number;
   };
 
-  stock: number; // Simplified top-level stock
+  stock: number; 
   inventory?: {
     stock: number;
     batchNumber: string;
@@ -68,6 +69,12 @@ const medicineSchema = new Schema<MedicineType>(
     manufacturer: { type: String, required: true },
 
     isPrescriptionRequired: { type: Boolean, default: false },
+    visibility: {
+      type: String,
+      enum: ["public", "restricted"],
+      default: "public",
+      index: true,
+    },
 
     pricing: {
       mrp: { type: Number, required: true },
@@ -77,7 +84,7 @@ const medicineSchema = new Schema<MedicineType>(
       gst: { type: Number, default: 0 },
     },
 
-    stock: { type: Number, default: 0 }, // Simplified top-level stock
+    stock: { type: Number, default: 0 },
 
     inventory: [
       {

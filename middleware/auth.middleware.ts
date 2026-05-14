@@ -69,3 +69,39 @@ export const authorizeRoles = (...roles: string[]) => {
     next();
   };
 };
+
+export const optionalProtect = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    let token: string | undefined;
+
+    if (req.headers.authorization?.startsWith("Bearer")) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+        id: string;
+      };
+
+      const user = await User.findById(decoded.id);
+
+      if (user && !user.isBlocked) {
+        req.user = {
+          _id: user._id,
+          id: user._id.toString(),
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          isBlocked: user.isBlocked,
+        } as any;
+      }
+    }
+    next();
+  } catch (err) {
+    next();
+  }
+};

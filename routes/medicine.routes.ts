@@ -1,22 +1,24 @@
 import express from "express";
 import {
-deleteMedicine,
-getMedicineById,
-getMedicines,
-createMedicine,
-updateMedicine,
-getAllMedicines,
-getMedicineByBarcode,
+  getMedicineById,
+  getAllMedicines,
 } from "../controllers/medicine.controller.js";
-import { protect } from "../middleware/auth.middleware.js";
-import {upload} from "../middleware/upload.js";
+import {
+  deleteMedicine,
+  getMedicines,
+  createMedicine,
+  updateMedicine,
+} from "../controllers/medicine.seller.controller.js";
+
+import { protect, optionalProtect } from "../middleware/auth.middleware.js";
+import { upload } from "../middleware/upload.js";
 const router = express.Router();
 
 console.log("MEDICINE ROUTES REGISTERING...");
-router.get("/all", getAllMedicines); // Public route
-router.get("/barcode/:barcode", getMedicineByBarcode); // Public route
+router.get("/all", optionalProtect, getAllMedicines); // Public route
+
 router.get("/:id", getMedicineById); // Public route
-router.use(protect); // 🔥 all following routes protected
+router.use(protect); // 🔥 all following route
 router.post("/", upload.array("images", 10), createMedicine);
 router.get("/", getMedicines);
 router.put("/:id", upload.array("images", 10), updateMedicine);

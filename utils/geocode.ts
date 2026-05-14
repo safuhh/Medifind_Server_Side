@@ -2,7 +2,7 @@ import axios from "axios";
 
 export const getAddressFromCoords = async (lat: number, lng: number) => {
   try {
-    console.log(`>>> GEOCODING START: lat=${lat}, lng=${lng}`);
+    console.log(`GEOCODING START: lat=${lat}, lng=${lng}`);
     const res = await axios.get("https://nominatim.openstreetmap.org/reverse", {
       params: {
         lat,
@@ -17,10 +17,10 @@ export const getAddressFromCoords = async (lat: number, lng: number) => {
     });
 
     const data = res.data;
-    console.log(">>> NOMINATIM RESPONSE:", !!data);
+    console.log(" NOMINATIM RESPONSE:", !!data);
 
     if (!data || !data.address) {
-      console.log(">>> NOMINATIM EMPTY ADDRESS:", data);
+      console.log(" NOMINATIM EMPTY ADDRESS:", data);
       return { shortName: "Unknown location", fullAddress: "Address not found" };
     }
 
@@ -37,7 +37,11 @@ export const getAddressFromCoords = async (lat: number, lng: number) => {
 
     return {
       shortName,
-      fullAddress: data.display_name || "",
+      fullAddress: data.display_name,
+      city: addr.city || addr.town || addr.village || addr.suburb || "",
+      state: addr.state || "",
+      zip: addr.postcode || "",
+      country: addr.country || "",
     };
   } catch (err: any) {
     console.error(">>> GEOCODE CRITICAL ERROR:", err.message);

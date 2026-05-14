@@ -15,6 +15,8 @@ export type UserType = {
   };
 
   refreshToken?: string;
+  stripeAccountId?: string;
+  hasAgreedToConsultationTerms?: boolean;
 
   createdAt: Date;
   updatedAt: Date;
@@ -32,6 +34,8 @@ const userSchema = new Schema<UserType>(
 
     refreshToken: { type: String },
 
+    stripeAccountId: { type: String },
+
     role: {
       type: String,
       enum: ["user", "admin", "seller", "delivery_boy", "doctor"],
@@ -39,6 +43,11 @@ const userSchema = new Schema<UserType>(
     },
 
     isBlocked: {
+      type: Boolean,
+      default: false,
+    },
+
+    hasAgreedToConsultationTerms: {
       type: Boolean,
       default: false,
     },

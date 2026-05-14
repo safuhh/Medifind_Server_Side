@@ -11,6 +11,8 @@ export interface IDoctorApplication extends Document {
   location: {
     type: "Point";
     coordinates: [number, number];
+    shortName?: string;
+    fullAddress?: string;
   };
 
   // Qualification
@@ -69,6 +71,8 @@ const DoctorApplicationSchema = new Schema<IDoctorApplication>(
         type: [Number],
         required: true,
       },
+      shortName: { type: String },
+      fullAddress: { type: String },
     },
 
     // Qualification
@@ -122,6 +126,12 @@ const DoctorApplicationSchema = new Schema<IDoctorApplication>(
 );
 
 DoctorApplicationSchema.index({ location: "2dsphere" });
+
+// Indexes for search performance
+DoctorApplicationSchema.index({ userId: 1 });
+DoctorApplicationSchema.index({ status: 1 });
+DoctorApplicationSchema.index({ specialization: 1 });
+DoctorApplicationSchema.index({ createdAt: -1 });
 
 export const DoctorApplication = mongoose.model<IDoctorApplication>(
   "DoctorApplication",

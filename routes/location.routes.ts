@@ -17,7 +17,11 @@ router.get("/reverse", async (req, res) => {
 
     return res.json({
       address: data.fullAddress || data.shortName || "Address not found",
-      shortName: data.shortName
+      shortName: data.shortName,
+      city: data.city,
+      state: data.state,
+      zip: data.zip,
+      country: data.country
     });
   } catch (error) {
     console.error("Reverse geocode error:", error);

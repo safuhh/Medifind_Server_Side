@@ -1,13 +1,16 @@
 import { Router } from "express";
 import { 
-    applyDoctor, 
-    getApplicationStatus, 
-    getAllDoctorApplications, 
-    reviewDoctorApplication,
     getDoctorsBySpecialization,
     getSingleDoctor,
     updateDoctorProfile
 } from "../controllers/doctor.controller.js";
+
+import { 
+    applyDoctor, 
+    getApplicationStatus, 
+    getAllDoctorApplications, 
+    reviewDoctorApplication,
+} from "../controllers/doctorApplication.controller.js";
 import { protect, authorizeRoles } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/upload.js";
 

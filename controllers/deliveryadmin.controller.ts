@@ -40,7 +40,7 @@ export const approveDeliveryBoy = async (req: AuthRequest, res: Response) => {
       try {
         await sendEmail(
           user.email,
-          "🎉 Application Approved",
+          " Application Approved",
           `<h2>Congrats ${user.name || "User"} </h2><p>Your delivery partner request has been <b>approved</b>.</p><p>You can now log in and start accepting deliveries.</p><a href="${process.env.CLIENT_URL}/delivery/dashboard" style="display:inline-block;margin-top:12px;padding:10px 16px;background:#105e3f;color:white;text-decoration:none;border-radius:6px;font-weight:600;">Go to Dashboard</a>`,
         );
       } catch (err) {

@@ -10,7 +10,6 @@ export const saveAvailability = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "doctor_id is required" });
         }
 
-        // Use findOneAndUpdate with upsert: true to either update existing or create new
         const availability = await DoctorAvailability.findOneAndUpdate(
             { doctor_id },
             {

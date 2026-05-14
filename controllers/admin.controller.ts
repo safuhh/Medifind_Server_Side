@@ -3,6 +3,7 @@ import { AuthRequest } from "../types/authRequest.js";
 import { User } from "../models/user.model.js";
 import { SellerRequest } from "../models/sellerRequest.model.js";
 import { sendEmail } from "../utils/sendEmail.js";
+import { Order } from "../models/order.model.js";
 
 export const approveseller = async (req: AuthRequest, res: Response) => {
   try {
@@ -160,4 +161,5 @@ export const getSellerRequests = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 

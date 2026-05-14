@@ -17,7 +17,7 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req: any, file: any) => {
     return {
-      folder: "health_app",
+      folder: "health_app", 
       resource_type: "auto",
       public_id: Date.now() + "-" + file.originalname.split(".")[0],
     };

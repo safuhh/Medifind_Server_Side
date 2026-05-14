@@ -62,7 +62,7 @@ export const googleAuth = async (req: Request, res: Response) => {
     user.refreshToken = refreshToken;
     await user.save();
 
-    res.cookie("refreshToken", refreshToken, {  
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: false,
       sameSite: "lax",
@@ -113,7 +113,15 @@ export const refreshToken = async (req: Request, res: Response) => {
       { expiresIn: "15m" },
     );
 
-    return res.json({ accessToken: newAccessToken });
+    return res.json({
+      accessToken: newAccessToken,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
   } catch (err) {
     return res.status(403).json({ message: "Invalid refresh token" });
   }
@@ -134,6 +142,32 @@ export const getCurrentUser = async (req: AuthRequest, res: Response) => {
     return res.json({ user });
   } catch (err: any) {
     console.log("Get user error:", err.message);
+    return res.status(500).json({ message: "Server Error" });
+  }
+};
+
+export const updateConsultationConsent = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { hasAgreedToConsultationTerms: true },
+      { new: true },
+    ).select("-__v");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.json({ success: true, user });
+  } catch (err: any) {
+    console.log("Update consent error:", err.message);
     return res.status(500).json({ message: "Server Error" });
   }
 };
