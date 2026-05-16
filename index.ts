@@ -22,7 +22,9 @@ import orderQueryRoutes from "./routes/orderQuery.routes.js";
 import commissionsRoutes from "./routes/commissions.routes.js";
 import sellerEarningsRoutes from "./routes/seller.earnings.routes.js";
 import stripeRoutes from "./routes/stripe.routes.js";
-
+import restockRoutes from "./routes/restock.routes.js";
+import doctorRevenueRoutes from "./routes/doctor.revenu.routes.js";
+import doctorGetRoutes from "./routes/doctor.get.routes.js";
 const router = express.Router();
 
 router.use("/doctor", doctorRoutes);
@@ -48,4 +50,7 @@ router.use("/orders", orderQueryRoutes);
 router.use("/commissions", commissionsRoutes);
 router.use("/seller-earnings", sellerEarningsRoutes);
 router.use("/stripe", stripeRoutes);
+router.use("/restock", restockRoutes);
+router.use("/doctor-revenue", doctorRevenueRoutes);
+router.use("/doctor-get", doctorGetRoutes);
 export default router;

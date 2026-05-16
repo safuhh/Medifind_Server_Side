@@ -19,6 +19,11 @@ export const initSocket = (httpServer: HttpServer, app: any) => {
       console.log(`User ${socket.id} joined room: ${id}`);
     });
 
+    socket.on("join_seller_room", (sellerId) => {
+      socket.join(sellerId);
+      console.log(`Seller ${socket.id} joined room: ${sellerId}`);
+    });
+
     socket.on("notify_patient", (data) => {
       const { patientId, roomId, doctorName } = data;
       io.to(patientId).emit("consultation_started", { roomId, doctorName });

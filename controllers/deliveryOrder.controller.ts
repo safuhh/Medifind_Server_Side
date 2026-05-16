@@ -238,29 +238,8 @@ export const deliverOrder = async (req: AuthRequest, res: Response) => {
     order.orderStatus = "delivered";
     await order.save();
 
-    const deliveryBoyUser = await User.findById(userId);
-    if (deliveryBoyUser?.stripeAccountId && order.deliveryPartnerEarnings > 0) {
-      try {
-        await stripe.transfers.create({
-          amount: Math.round(order.deliveryPartnerEarnings * 100),
-          currency: "inr",
-          destination: deliveryBoyUser.stripeAccountId,
-          description: `Delivery payout for Order ${order._id}`,
-        });
-        console.log(
-          `Successfully transferred ${order.deliveryPartnerEarnings} to delivery boy ${userId}`,
-        );
-      } catch (err: any) {
-        console.error(
-          `Failed to transfer to delivery boy ${userId}:`,
-          err.message,
-        );
-      }
-    } else {
-      console.log(
-        `Skipping transfer for delivery boy ${userId} (No Stripe account linked or earnings 0)`,
-      );
-    }
+    // Stripe Connect transfers removed as per request.
+    // The delivery earnings are still calculated and stored in the order model.
 
     deliveryBoy.currentOrderId = null;
     deliveryBoy.isAvailable = true;

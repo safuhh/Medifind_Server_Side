@@ -16,6 +16,13 @@ export const getSellerEarnings = async (req: AuthRequest, res: Response) => {
     const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfThisYear = new Date(now.getFullYear(), 0, 1);
 
+    // For graphs: 7 days ago and 6 months ago
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const sixMonthsAgo = new Date(now);
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
     const earningsData = await Order.aggregate([
       {
         $match: {
@@ -83,6 +90,26 @@ export const getSellerEarnings = async (req: AuthRequest, res: Response) => {
                 count: { $size: { $ifNull: ["$orders", []] } }
               }
             }
+          ],
+          dailyHistory: [
+            { $match: { createdAt: { $gte: sevenDaysAgo } } },
+            {
+              $group: {
+                _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                earnings: { $sum: { $multiply: ["$items.sellerEarning", "$items.quantity"] } }
+              }
+            },
+            { $sort: { "_id": 1 } }
+          ],
+          monthlyHistory: [
+            { $match: { createdAt: { $gte: sixMonthsAgo } } },
+            {
+              $group: {
+                _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+                earnings: { $sum: { $multiply: ["$items.sellerEarning", "$items.quantity"] } }
+              }
+            },
+            { $sort: { "_id": 1 } }
           ]
         }
       }
@@ -98,7 +125,9 @@ export const getSellerEarnings = async (req: AuthRequest, res: Response) => {
       success: true,
       today,
       thisMonth,
-      thisYear
+      thisYear,
+      dailyHistory: result.dailyHistory,
+      monthlyHistory: result.monthlyHistory
     });
 
   } catch (error) {

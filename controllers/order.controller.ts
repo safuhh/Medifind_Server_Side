@@ -39,6 +39,13 @@ export const checkoutCart = async (req: Request, res: Response) => {
       const medicine: any = item.medicineId;
       if (!medicine) continue;
 
+      if (medicine.stock < item.quantity) {
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient stock for ${medicine.name}. Only ${medicine.stock} units available.`,
+        });
+      }
+
       const basePrice = medicine.pricing.sellingPrice;
       const gstPercentage = medicine.pricing.gst || 0;
       const gstAmount = (basePrice * gstPercentage) / 100;
@@ -233,59 +240,33 @@ export const confirmOrderPayment = async (req: Request, res: Response) => {
     order.orderStatus = "confirmed";
     await order.save();
 
-    // --- NEW FEATURE: Stripe Connect Transfers ---
-    // Transfer money to sellers
-    const sellers = [
-      ...new Set(order.items.map((item) => item.sellerId.toString())),
-    ];
-
-    for (const sellerId of sellers) {
-      const seller = await User.findById(sellerId);
-
-      // Calculate total earnings for this specific seller in this order
-      const sellerEarning = order.items
-        .filter((item) => item.sellerId.toString() === sellerId)
-        .reduce((sum, item) => sum + item.sellerEarning, 0);
-
-      const destinationAccount = seller?.stripeAccountId;
-
-      if (destinationAccount && sellerEarning > 0) {
-        try {
-          await stripe.transfers.create({
-            amount: Math.round(sellerEarning * 100), // Convert to cents/paise
-            currency: "inr",
-            destination: destinationAccount,
-            description: `Payout for Order ${order._id}`,
-          });
-          console.log(
-            `Successfully transferred ${sellerEarning} to seller ${sellerId}`,
-          );
-        } catch (err: any) {
-          console.error(
-            `Failed to transfer to seller ${sellerId}:`,
-            err.message,
-          );
-        }
-      } else {
-        console.log(
-          `Skipping transfer for seller ${sellerId} (No Stripe account linked or earnings 0)`,
-        );
-      }
-    }
-    // ----------------------------------------------
+    // Stripe Connect transfers removed as per request.
+    // The split amounts are still calculated and stored in the order model.
 
     // Decrease the stock for each medicine
+    const io = req.app.get("io");
     for (const item of order.items) {
-      await Medicine.findByIdAndUpdate(item.medicineId, {
-        $inc: { stock: -item.quantity },
-      });
+      const updatedMedicine = await Medicine.findByIdAndUpdate(
+        item.medicineId,
+        { $inc: { stock: -item.quantity } },
+        { new: true }
+      );
+
+      if (updatedMedicine && updatedMedicine.stock < 10) {
+        if (io) {
+          io.to(updatedMedicine.sellerId.toString()).emit("low_stock_alert", {
+            medicineId: updatedMedicine._id,
+            name: updatedMedicine.name,
+            stock: updatedMedicine.stock,
+          });
+        }
+      }
     }
 
     // Clear the cart
     await Cart.findOneAndUpdate({ userId }, { items: [] });
 
     // Optional: Notify Sellers using socket.io
-    const io = req.app.get("io");
     if (io) {
       // Group items by seller and notify them
       const sellers = new Set(

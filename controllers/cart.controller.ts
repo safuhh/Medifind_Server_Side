@@ -1,5 +1,6 @@
 import { Cart } from "../models/cart.model.js";
 import { Request, Response } from "express";
+import { Medicine } from "../models/medicine.model.js";
 
 // Helper to find item in cart
 const findItem = (cart: any, medicineId: string) => 
@@ -7,8 +8,19 @@ const findItem = (cart: any, medicineId: string) =>
 
 export const addToCart = async (req: Request, res: Response) => {
   try {
-    const { medicineId, quantity, prescribedQty } = req.body;
     const userId = (req as any).user.id;
+    const quantity = Number(req.body.quantity);
+    const prescribedQty = req.body.prescribedQty ? Number(req.body.prescribedQty) : undefined;
+    const { medicineId } = req.body;
+
+    const medicine = await Medicine.findById(medicineId);
+    if (!medicine) {
+      return res.status(404).json({ success: false, message: "Medicine not found" });
+    }
+
+    if (medicine.sellerId.toString() === userId) {
+      return res.status(400).json({ success: false, message: "Sellers cannot buy their own products" });
+    }
     
     let cart = await Cart.findOne({ userId });
     
@@ -25,9 +37,18 @@ export const addToCart = async (req: Request, res: Response) => {
     
     if (item) {
       const maxQty = prescribedQty || item.prescribedQty;
-      item.quantity = maxQty ? Math.min(maxQty, item.quantity + quantity) : item.quantity + quantity;
+      const newQty = item.quantity + quantity;
+      
+      if (newQty > medicine.stock) {
+        return res.status(400).json({ success: false, message: `Only ${medicine.stock} units available in stock` });
+      }
+      
+      item.quantity = maxQty ? Math.min(maxQty, newQty) : newQty;
       if (prescribedQty) item.prescribedQty = prescribedQty;
     } else {
+      if (quantity > medicine.stock) {
+        return res.status(400).json({ success: false, message: `Only ${medicine.stock} units available in stock` });
+      }
       cart.items.push({ medicineId, quantity, prescribedQty });
     }
     
@@ -52,6 +73,15 @@ export const increaseQuantity = async (req: Request, res: Response) => {
     const item = findItem(cart, medicineId);
     if (!item) {
       return res.status(404).json({ success: false, message: "Item not found in cart" });
+    }
+    
+    const medicine = await Medicine.findById(medicineId);
+    if (!medicine) {
+      return res.status(404).json({ success: false, message: "Medicine not found" });
+    }
+    
+    if (item.quantity + 1 > medicine.stock) {
+      return res.status(400).json({ success: false, message: `Only ${medicine.stock} units available in stock` });
     }
     
     if (item.prescribedQty && item.quantity >= item.prescribedQty) {
