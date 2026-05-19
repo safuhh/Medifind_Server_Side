@@ -5,7 +5,7 @@ import sellerRoutes from "./routes/seller.routes.js";
 import deliveryBoyRoutes from "./routes/deliveryBoy.routes.js";
 import deliveryOrderRoutes from "./routes/deliveryOrder.routes.js";
 import deliveryAdminRoutes from "./routes/admin.deliveryBoy.routes.js";
-import sellerBlockRoutes from "./routes/sellerblock.routes.js";
+import sellerBlockRoutes from "./routes/seller.Block.routes.js";
 import blockDeliveryBoyRoutes from "./routes/blockdeliveryboy.routes.js";
 import medicineRoutes from "./routes/medicine.routes.js";
 import doctorRoutes from "./routes/doctor.routes.js";

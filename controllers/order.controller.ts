@@ -12,7 +12,7 @@ const stripe = new Stripe(
 
 export const checkoutCart = async (req: Request, res: Response) => {
   try {
-    const { deliveryDetailsId } = req.body;
+    const { deliveryDetailsId, buyNowMedicineId, buyNowQuantity } = req.body;
     const userId = (req as any).user.id;
 
     if (!deliveryDetailsId) {
@@ -21,9 +21,21 @@ export const checkoutCart = async (req: Request, res: Response) => {
         .json({ success: false, message: "Delivery details ID is required" });
     }
 
-    const cart = await Cart.findOne({ userId }).populate("items.medicineId");
-    if (!cart || cart.items.length === 0) {
-      return res.status(400).json({ success: false, message: "Cart is empty" });
+    let items: any[] = [];
+    const isBuyNow = !!(buyNowMedicineId && buyNowQuantity);
+
+    if (isBuyNow) {
+      const medicine = await Medicine.findById(buyNowMedicineId);
+      if (!medicine) {
+        return res.status(404).json({ success: false, message: "Medicine not found" });
+      }
+      items = [{ medicineId: medicine, quantity: Number(buyNowQuantity) }];
+    } else {
+      const cart = await Cart.findOne({ userId }).populate("items.medicineId");
+      if (!cart || cart.items.length === 0) {
+        return res.status(400).json({ success: false, message: "Cart is empty" });
+      }
+      items = cart.items;
     }
 
     let totalAmount = 0;
@@ -35,7 +47,7 @@ export const checkoutCart = async (req: Request, res: Response) => {
     const PLATFORM_COMMISSION_PERCENTAGE = 10; // Platform takes 10% from sellers
 
     // GST Calculation & Split
-    for (const item of cart.items) {
+    for (const item of items) {
       const medicine: any = item.medicineId;
       if (!medicine) continue;
 
@@ -164,6 +176,7 @@ export const checkoutCart = async (req: Request, res: Response) => {
       deliveryPartnerEarnings,
       paymentStatus: "pending",
       orderStatus: "pending",
+      isBuyNow,
     });
 
     let session;
@@ -173,7 +186,7 @@ export const checkoutCart = async (req: Request, res: Response) => {
         line_items: lineItems,
         mode: "payment",
         success_url: `${frontendUrl}/order/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${frontendUrl}/cart`,
+        cancel_url: isBuyNow ? `${frontendUrl}/medicines/${buyNowMedicineId}` : `${frontendUrl}/cart`,
         metadata: {
           orderId: order._id.toString(),
           userId: userId.toString(),
@@ -235,6 +248,25 @@ export const confirmOrderPayment = async (req: Request, res: Response) => {
       return res.status(200).json({ success: true, order });
     }
 
+    // Verify payment status with Stripe (if not mock session)
+    if (!sessionId.startsWith("mock_session_")) {
+      try {
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
+        if (session.payment_status !== "paid") {
+          return res.status(400).json({ 
+            success: false, 
+            message: "Payment is not completed. Stripe status: " + session.payment_status 
+          });
+        }
+      } catch (stripeError: any) {
+        console.error("Stripe Session Retrieval Error:", stripeError);
+        return res.status(400).json({ 
+          success: false, 
+          message: "Failed to verify payment status with Stripe." 
+        });
+      }
+    }
+
     // Update order status
     order.paymentStatus = "paid";
     order.orderStatus = "confirmed";
@@ -263,8 +295,10 @@ export const confirmOrderPayment = async (req: Request, res: Response) => {
       }
     }
 
-    // Clear the cart
-    await Cart.findOneAndUpdate({ userId }, { items: [] });
+    // Clear the cart only if it's not a direct Buy Now checkout
+    if (!order.isBuyNow) {
+      await Cart.findOneAndUpdate({ userId }, { items: [] });
+    }
 
     // Optional: Notify Sellers using socket.io
     if (io) {

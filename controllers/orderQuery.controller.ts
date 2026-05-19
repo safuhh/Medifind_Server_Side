@@ -51,7 +51,7 @@ export const getUserOrders = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
 
-    const orders = await Order.find({ userId })
+    const orders = await Order.find({ userId, paymentStatus: "paid" })
       .populate("deliveryDetailsId")
       .populate("items.medicineId")
       .sort({ createdAt: -1 });

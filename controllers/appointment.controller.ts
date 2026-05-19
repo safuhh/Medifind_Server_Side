@@ -3,46 +3,7 @@ import { DoctorBooking } from "../models/doctor.booking.model.js";
 import { DoctorApplication } from "../models/doctor.model.js";
 import { Consultation } from "../models/consultation.model.js";
 import dayjs from "dayjs";
-import crypto from "crypto";
-
-const parseTimeSlot = (date: Date, timeSlot: string) => {
-  let hours = 0;
-  let minutes = 0;
-
-  if (timeSlot) {
-    const parts = timeSlot.split(" ");
-    const timeParts = parts[0].split(":");
-    hours = parseInt(timeParts[0]);
-    minutes = parseInt(timeParts[1]);
-    const modifier = parts[1];
-
-    if (modifier === "PM" && hours < 12) hours += 12;
-    if (modifier === "AM" && hours === 12) hours = 0;
-  }
-
-  return dayjs(date)
-    .startOf("day")
-    .add(hours, "hour")
-    .add(minutes, "minute")
-    .toDate();
-};
-
-const createConsultationForBooking = async (booking: any) => {
-  const random = crypto.randomBytes(16).toString("hex");
-
-  const userId = booking.userId._id || booking.userId;
-  const roomId = `consultation_${booking.doctorId}_${userId}_${random}`;
-  const scheduledAt = parseTimeSlot(booking.date, booking.timeSlot);
-
-  return await Consultation.create({
-    doctorId: booking.doctorId,
-    patientId: userId,
-    bookingId: booking._id,
-    roomId: roomId,
-    scheduledAt: scheduledAt,
-    status: "scheduled",
-  });
-};
+import { parseTimeSlot, createConsultationForBooking } from "../utils/booking.helper.js";
 
 export const getDoctorAppointments = async (req: any, res: Response) => {
   try {

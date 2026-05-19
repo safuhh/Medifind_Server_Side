@@ -37,8 +37,19 @@ export const getAllMedicines = async (req: Request, res: Response) => {
       {
         $lookup: {
           from: "sellerrequests",
-          localField: "sellerId",
-          foreignField: "userId",
+          let: { seller_id: "$sellerId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$userId", "$$seller_id"] },
+                    { $eq: ["$status", "approved"] }
+                  ]
+                }
+              }
+            }
+          ],
           as: "shop",
         },
       },
@@ -144,8 +155,19 @@ export const getMedicineById = async (req: Request, res: Response) => {
       {
         $lookup: {
           from: "sellerrequests",
-          localField: "sellerId",
-          foreignField: "userId",
+          let: { seller_id: "$sellerId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$userId", "$$seller_id"] },
+                    { $eq: ["$status", "approved"] }
+                  ]
+                }
+              }
+            }
+          ],
           as: "shop",
         },
       },

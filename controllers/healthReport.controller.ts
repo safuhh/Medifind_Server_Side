@@ -48,22 +48,27 @@ export const getHealthReportByBooking = async (req: any, res: Response) => {
     const { bookingId } = req.params;
     const userId = req.user?.id;
 
+    // 1. Verify booking exists and user is authorized
+    const booking = await DoctorBooking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ success: false, message: "Booking not found" });
+    }
+
+    const doctorProfile = await DoctorApplication.findOne({ userId });
+    const isPatient = booking.userId.toString() === userId;
+    const isDoctor = doctorProfile && booking.doctorId.toString() === doctorProfile._id.toString();
+
+    if (!isPatient && !isDoctor) {
+      return res.status(403).json({ success: false, message: "Unauthorized to view this report" });
+    }
+
+    // 2. Fetch the report
     const report = await HealthReport.findOne({ bookingId })
       .populate("doctorId", "fullName specialization profileImage")
       .populate("patientId", "name email");
 
     if (!report) {
-      return res.status(404).json({ success: false, message: "Health report not found" });
-    }
-
-    // Verify authorization (either doctor or patient)
-    const doctor = await DoctorApplication.findOne({ userId });
-    
-    const isPatient = report.patientId._id.toString() === userId;
-    const isDoctor = doctor && report.doctorId._id.toString() === doctor._id.toString();
-
-    if (!isPatient && !isDoctor) {
-      return res.status(403).json({ success: false, message: "Unauthorized to view this report" });
+      return res.status(200).json({ success: true, report: null });
     }
 
     return res.status(200).json({ success: true, report });

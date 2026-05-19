@@ -22,6 +22,7 @@ export interface IOrder extends Document {
   stripeSessionId?: string;
   orderStatus: "pending" | "confirmed" | "picked_up" | "delivered";
   deliveryBoyId?: Types.ObjectId;
+  isBuyNow?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -57,6 +58,7 @@ const orderSchema = new Schema<IOrder>(
       default: "pending",
     },
     deliveryBoyId: { type: Schema.Types.ObjectId, ref: "DeliveryBoy" },
+    isBuyNow: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

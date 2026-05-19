@@ -153,22 +153,28 @@ export const updateSellerInfo = async (req: any, res: Response) => {
     const upload = await SellerRequest.findOneAndUpdate(
       { userId },
       {
-        shopName,
-        licenseNumber,
-        address,
-        phone,
-        location: {
-          address: geoData.shortName || address || "Unknown",
-          fullAddress: geoData.fullAddress || "",
-          lat: parsedLat,
-          lng: parsedLng,
+        $set: {
+          shopName,
+          licenseNumber,
+          address,
+          phone,
+          location: {
+            address: geoData.shortName || address || "Unknown",
+            fullAddress: geoData.fullAddress || "",
+            lat: parsedLat,
+            lng: parsedLng,
+          },
         },
+        $setOnInsert: {
+          userId,
+          status: "approved",
+        }
       },
-      { new: true },
+      { new: true, upsert: true },
     );
 
     if (!upload) {
-      return res.status(404).json({ message: "Seller not found" });
+      return res.status(500).json({ message: "Failed to update seller info" });
     }
 
     res.json({ message: "Seller info updated", upload });

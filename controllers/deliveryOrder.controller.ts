@@ -96,6 +96,7 @@ export const getAvailableOrders = async (req: AuthRequest, res: Response) => {
     }
 
     const availableOrders = await Order.find({
+      paymentStatus: "paid",
       orderStatus: { $in: ["confirmed", "pending"] },
       $or: [{ deliveryBoyId: { $exists: false } }, { deliveryBoyId: null }],
     })
