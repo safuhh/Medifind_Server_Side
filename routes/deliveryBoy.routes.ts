@@ -3,8 +3,8 @@ import {
   applyDeliveryBoy,
   updateDeliveryBoyInfo,
   getcurrentDeliveryBoyInfo,
-} from "../controllers/deliveryBoy.controller.js";
-import { getearnings } from "../controllers/deliveryboyEarnings.controller.js";
+} from "../controllers/deliveryboycontroller/deliveryboy.controller.js";
+import { getearnings } from "../controllers/deliveryboycontroller/deliveryboyEarnings.controller.js";
 
 import { protect, authorizeRoles } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/upload.js";

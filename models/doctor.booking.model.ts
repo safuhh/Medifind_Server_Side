@@ -9,6 +9,7 @@ export interface IDoctorBooking extends Document {
   paymentStatus: "pending" | "paid" | "failed";
   stripeSessionId?: string;
   amount: number;
+  reason?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -49,6 +50,9 @@ const DoctorBookingSchema: Schema = new Schema(
     amount: {
         type: Number,
         required: true
+    },
+    reason: {
+        type: String,
     }
   },
   { timestamps: true }

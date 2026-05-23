@@ -6,9 +6,9 @@ import {
   updateConsultationConsent,
   logout,
   getAllUsers,
-} from "../controllers/auth.controller.js";
+} from "../controllers/usercontrollers/auth.controller.js";
 
-import { protect } from "../middleware/auth.middleware.js";
+import { protect, authorizeRoles } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
@@ -17,6 +17,6 @@ router.post("/refresh", refreshToken);
 router.get("/current", protect, getCurrentUser);
 router.put("/consent", protect, updateConsultationConsent);
 router.post("/logout", logout);
-router.get("/users", getAllUsers);
+router.get("/users", protect, authorizeRoles("admin"), getAllUsers);
 
 export default router;

@@ -7,6 +7,7 @@ export interface IOrderItem {
   price: number;
   platformFee: number;
   sellerEarning: number;
+  isPickedUp: boolean;
 }
 
 export interface IOrder extends Document {
@@ -20,6 +21,7 @@ export interface IOrder extends Document {
   deliveryPartnerEarnings: number;
   paymentStatus: "pending" | "paid" | "failed";
   stripeSessionId?: string;
+  splitFulfillmentId?: string;
   orderStatus: "pending" | "confirmed" | "picked_up" | "delivered";
   deliveryBoyId?: Types.ObjectId;
   isBuyNow?: boolean;
@@ -34,6 +36,7 @@ const orderItemSchema = new Schema<IOrderItem>({
   price: { type: Number, required: true },
   platformFee: { type: Number, default: 0 },
   sellerEarning: { type: Number, default: 0 },
+  isPickedUp: { type: Boolean, default: false },
 });
 
 const orderSchema = new Schema<IOrder>(
@@ -52,6 +55,7 @@ const orderSchema = new Schema<IOrder>(
       default: "pending",
     },
     stripeSessionId: { type: String },
+    splitFulfillmentId: { type: String },
     orderStatus: {
       type: String,
       enum: ["pending", "confirmed", "picked_up", "delivered"],
@@ -63,4 +67,4 @@ const orderSchema = new Schema<IOrder>(
   { timestamps: true }
 );
 
-export const Order = mongoose.models.Order || mongoose.model<IOrder>("Order", orderSchema);
+export const Order: mongoose.Model<IOrder> = mongoose.models.Order || mongoose.model<IOrder>("Order", orderSchema);

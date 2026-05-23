@@ -1,6 +1,6 @@
 import express from "express";
 const router = express.Router();
-import { addToCart, increaseQuantity, decreaseQuantity, deleteCart, getCart } from "../controllers/cart.controller.js";
+import { addToCart, increaseQuantity, decreaseQuantity, deleteCart, getCart } from "../controllers/usercontrollers/cart.controller.js";
 import { protect, } from "../middleware/auth.middleware.js";
 router.post("/add-to-cart", protect, addToCart);
 router.post("/increase-quantity", protect, increaseQuantity);

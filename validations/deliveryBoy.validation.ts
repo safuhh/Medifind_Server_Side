@@ -14,7 +14,7 @@ export const applyDeliveryBoySchema = Joi.object({
 
   vehicleNumber: Joi.string().min(5).max(20).required(),
 
-  address: Joi.string().min(5).max(100).required(),
+  address: Joi.string().min(5).max(500).required(),
 
   aadhaarNumber: Joi.string()
     .pattern(/^\d{12}$/)
@@ -38,4 +38,8 @@ export const updateDeliveryBoySchema = Joi.object({
     .valid("bike", "scooter", "cycle"),
 
   vehicleNumber: Joi.string().min(5).max(20),
+
+  address: Joi.string().min(5).max(500),
+  lat: Joi.number(),
+  lng: Joi.number(),
 });

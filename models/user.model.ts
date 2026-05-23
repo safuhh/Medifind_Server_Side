@@ -6,8 +6,15 @@ export type UserType = {
   email: string;
   phone?: string;
   image?: string;
-  role: "user" | "admin" | "seller"| "delivery_boy" | "doctor";
+  role: "user" | "admin" | "seller" | "delivery_boy" | "doctor";
   isBlocked: boolean;
+  subscription?: {
+    planType: string;
+    trialUsed: number;
+    isPro: boolean;
+    expiryDate?: Date;
+    trialStartedAt?: Date;
+  };
 
   location?: {
     type: "Point";

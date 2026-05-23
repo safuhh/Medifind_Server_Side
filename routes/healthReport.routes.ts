@@ -1,5 +1,5 @@
 import express from "express";
-import { createHealthReport, getHealthReportByBooking } from "../controllers/healthReport.controller.js";
+import { createHealthReport, getHealthReportByBooking } from "../controllers/doctorcontroller/healthReport.controller.js";
 import { protect } from "../middleware/auth.middleware.js";
 
 const router = express.Router();

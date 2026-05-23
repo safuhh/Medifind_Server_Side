@@ -90,6 +90,6 @@ sellerRequestSchema.index({ shopName: 1 });
 sellerRequestSchema.index({ phone: 1 });
 sellerRequestSchema.index({ createdAt: -1 });
 
-export const SellerRequest =
+export const SellerRequest: mongoose.Model<ISellerRequest> =
   mongoose.models.SellerRequest ||
   mongoose.model<ISellerRequest>("SellerRequest", sellerRequestSchema);

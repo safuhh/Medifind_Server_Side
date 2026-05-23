@@ -4,7 +4,11 @@ import {
     blockDoctor,
     getAllDoctors,
     unblockDoctor,
-} from "../controllers/blockdoctor.controller.js";
+} from "../controllers/admincontroller/blockdoctor.controller.js";
+import { protect, authorizeRoles } from "../middleware/auth.middleware.js";
+
+router.use(protect);
+router.use(authorizeRoles("admin"));
 
 router.get("/all-doctors", getAllDoctors);
 router.post("/block-doctor/:doctorId", blockDoctor);

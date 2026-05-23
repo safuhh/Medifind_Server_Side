@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Document } from "mongoose";
 
 export interface ICart extends Document {
     userId: mongoose.Schema.Types.ObjectId;
@@ -35,7 +35,7 @@ const cartSchema = new mongoose.Schema<ICart>({
 
 
 
-export const Cart = mongoose.models.Cart || mongoose.model<ICart>(
+export const Cart: mongoose.Model<ICart> = mongoose.models.Cart || mongoose.model<ICart>(
     "Cart",
     cartSchema
 );

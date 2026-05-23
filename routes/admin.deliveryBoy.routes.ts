@@ -3,7 +3,7 @@ import {
   rejectDeliveryBoy,
   approveDeliveryBoy,
    getDeliveryBoyRequests, 
-} from "../controllers/deliveryadmin.controller.js";
+} from "../controllers/admincontroller/deliveryadmin.controller.js";
 
 import { protect, authorizeRoles } from "../middleware/auth.middleware.js";
 

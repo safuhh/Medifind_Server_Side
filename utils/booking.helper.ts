@@ -1,3 +1,4 @@
+// booking time slot and create consultation
 import dayjs from "dayjs";
 import crypto from "crypto";
 import { Consultation } from "../models/consultation.model.js";
@@ -8,9 +9,9 @@ export const parseTimeSlot = (date: Date, timeSlot: string) => {
 
   if (timeSlot) {
     const parts = timeSlot.split(" ");
-    const timeParts = parts[0].split(":");
-    hours = parseInt(timeParts[0]);
-    minutes = parseInt(timeParts[1]);
+    const timeParts = parts[0] ? parts[0].split(":") : [];
+    hours = parseInt(timeParts[0] || "0", 10);
+    minutes = parseInt(timeParts[1] || "0", 10);
     const modifier = parts[1];
 
     if (modifier === "PM" && hours < 12) hours += 12;

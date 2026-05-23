@@ -119,7 +119,7 @@ medicineSchema.index({ isActive: 1 });
 medicineSchema.index({ name: "text", brand: "text", category: "text", manufacturer: "text" });
 medicineSchema.index({ createdAt: -1 });
 
-export const Medicine = mongoose.models.Medicine || mongoose.model<MedicineType>(
+export const Medicine: mongoose.Model<MedicineType> = mongoose.models.Medicine || mongoose.model<MedicineType>(
   "Medicine",
   medicineSchema,
 );

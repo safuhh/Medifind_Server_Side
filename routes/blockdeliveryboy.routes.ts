@@ -4,7 +4,7 @@ import {
   blockDeliveryBoy,
   unblockDeliveryBoy,
   updateDeliveryBoy,
-} from "../controllers/blockdeliveryboy.controller.js";
+} from "../controllers/admincontroller/blockdeliveryboy.controller.js";
 import { protect, authorizeRoles } from "../middleware/auth.middleware.js";
 
 const router = express.Router();

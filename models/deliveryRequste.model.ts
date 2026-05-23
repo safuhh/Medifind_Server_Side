@@ -22,6 +22,8 @@ export interface IDeliveryBoy extends Document {
     aadhaarNumber: string;
     aadhaarImage: string;
     isVerified: boolean;
+    ocrStatus?: "matched" | "mismatched" | "unreadable" | "pending";
+    ocrExtractedNumber?: string;
   };
 
   isOnline: boolean;
@@ -109,6 +111,15 @@ const deliveryBoySchema = new Schema<IDeliveryBoy>(
         type: Boolean,
         default: false,
       },
+      ocrStatus: {
+        type: String,
+        enum: ["matched", "mismatched", "unreadable", "pending"],
+        default: "pending",
+      },
+      ocrExtractedNumber: {
+        type: String,
+        default: "",
+      },
     },
 
     isOnline: {
@@ -144,6 +155,6 @@ deliveryBoySchema.index({ "location.lat": 1, "location.lng": 1 });
 deliveryBoySchema.index({ phone: 1 });
 deliveryBoySchema.index({ createdAt: -1 });
 
-export const DeliveryBoy =
+export const DeliveryBoy: mongoose.Model<IDeliveryBoy> =
   mongoose.models.DeliveryBoy ||
   mongoose.model<IDeliveryBoy>("DeliveryBoy", deliveryBoySchema);

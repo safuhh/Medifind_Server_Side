@@ -25,6 +25,8 @@ import stripeRoutes from "./routes/stripe.routes.js";
 import restockRoutes from "./routes/restock.routes.js";
 import doctorRevenueRoutes from "./routes/doctor.revenu.routes.js";
 import doctorGetRoutes from "./routes/doctor.get.routes.js";
+import subscriptionRoutes from "./routes/subscription.routes.js";
+import mostsellingproductroutes from "./routes/mostsellingproducts.js";
 const router = express.Router();
 
 router.use("/doctor", doctorRoutes);
@@ -53,4 +55,7 @@ router.use("/stripe", stripeRoutes);
 router.use("/restock", restockRoutes);
 router.use("/doctor-revenue", doctorRevenueRoutes);
 router.use("/doctor-get", doctorGetRoutes);
+router.use("/subscriptions", subscriptionRoutes);
+router.use("/mostsellingproduct",mostsellingproductroutes)
+
 export default router;

@@ -5,7 +5,7 @@ import {
   sellerDashboard,
   updateSellerInfo,
   getCurrentSellerInfo
-} from "../controllers/seller.controller.js";
+} from "../controllers/sellercontroller/seller.controller.js";
 import { protect, authorizeRoles } from "../middleware/auth.middleware.js";
 
 const router = Router();

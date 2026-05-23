@@ -42,6 +42,8 @@ export interface IDoctorApplication extends Document {
   rejectionReason?: string;
 
   consultationFee: number;
+  rating?: number;
+  ratingCount?: number;
 
   createdAt: Date;
   updatedAt: Date;
@@ -120,7 +122,8 @@ const DoctorApplicationSchema = new Schema<IDoctorApplication>(
 
     consultationFee: { type: Number, default: 0 },
     rejectionReason: { type: String },
-
+    rating: { type: Number, default: 0 },
+    ratingCount: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

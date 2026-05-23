@@ -2,15 +2,18 @@ import { Router } from "express";
 import { 
     getDoctorsBySpecialization,
     getSingleDoctor,
-    updateDoctorProfile
-} from "../controllers/doctor.controller.js";
+    updateDoctorProfile,
+    getNearbyDoctors,
+    submitDoctorReview,
+    getDoctorReviews
+} from "../controllers/doctorcontroller/doctor.controller.js";
 
 import { 
     applyDoctor, 
     getApplicationStatus, 
     getAllDoctorApplications, 
     reviewDoctorApplication,
-} from "../controllers/doctorApplication.controller.js";
+} from "../controllers/admincontroller/doctorApplication.controller.js";
 import { protect, authorizeRoles } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/upload.js";
 
@@ -44,8 +47,11 @@ router.put(
 );
 
 router.get("/status", protect, getApplicationStatus);
-router.get("/all", getDoctorsBySpecialization);
+router.get("/all", protect, getDoctorsBySpecialization);
 router.get("/profile/:id", getSingleDoctor);
+router.get("/nearby", protect, getNearbyDoctors);
+router.post("/review", protect, submitDoctorReview);
+router.get("/reviews/:doctorId", getDoctorReviews);
 
 // Admin Routes
 router.get("/admin/applications", protect, authorizeRoles("admin"), getAllDoctorApplications);

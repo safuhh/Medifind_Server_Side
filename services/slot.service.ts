@@ -24,19 +24,21 @@ export const getAvailblitySlots = async (
     }
 
     // Generate morning slots
-    const morningSlots = availability.dailyavailability.morning.from && availability.dailyavailability.morning.to
+    const morning = availability.dailyavailability?.morning;
+    const morningSlots = morning?.from && morning?.to
         ? generateSlots(
-            availability.dailyavailability.morning.from,
-            availability.dailyavailability.morning.to,
+            morning.from,
+            morning.to,
             availability.slotDuration || 15
         )
         : [];
 
     // Generate evening slots
-    const eveningSlots = availability.dailyavailability.evening.from && availability.dailyavailability.evening.to
+    const evening = availability.dailyavailability?.evening;
+    const eveningSlots = evening?.from && evening?.to
         ? generateSlots(
-            availability.dailyavailability.evening.from,
-            availability.dailyavailability.evening.to,
+            evening.from,
+            evening.to,
             availability.slotDuration || 15
         )
         : [];
@@ -52,7 +54,9 @@ export const getAvailblitySlots = async (
         filteredSlots = allBaseSlots.filter(slot => {
             // Parse slot time (e.g. "10:00 AM")
             const parts = slot.split(" ");
+            if (!parts[0] || !parts[1]) return false;
             const timeParts = parts[0].split(":");
+            if (!timeParts[0] || !timeParts[1]) return false;
             let hours = parseInt(timeParts[0]);
             const minutes = parseInt(timeParts[1]);
             const modifier = parts[1];

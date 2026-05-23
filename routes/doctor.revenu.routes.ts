@@ -3,7 +3,7 @@ import {
   todayEarnings,
   monthlyEarnings,
   earlyearnings,
-} from "../controllers/doctor.revenue.controller.js";
+} from "../controllers/doctorcontroller/doctor.revenue.controller.js";
 import {protect,authorizeRoles} from "../middleware/auth.middleware.js";
 const router = express.Router();
 router.use(protect, authorizeRoles("doctor"));

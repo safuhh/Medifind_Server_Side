@@ -83,7 +83,19 @@ mongoose
     process.exit(1);
   });
 
+// Port configuration (defaults to 5000)
 const PORT = process.env.PORT || 5000;
+
+httpServer.on("error", (error: NodeJS.ErrnoException) => {
+  if (error.code === "EADDRINUSE") {
+    console.error(` Port ${PORT} is already in use.`);
+    console.error(" Stop the process using port 5000, then restart backend.");
+    process.exit(1);
+  }
+
+  console.error(" Failed to start server:", error.message);
+  process.exit(1);
+});
 
 console.log(` Starting server on port ${PORT}...`);
 httpServer.listen(PORT, () => {

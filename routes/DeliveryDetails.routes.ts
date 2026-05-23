@@ -5,7 +5,7 @@ import {
   updateDeliveryDetails,
   deleteDeliveryDetails,
   getUserDeliveryDetails,
-} from "../controllers/DeliveryDetails.controller.js";
+} from "../controllers/usercontrollers/DeliveryDetails.controller.js";
 import { protect, authorizeRoles } from "../middleware/auth.middleware.js";
 const router = express.Router();
 router.post("/", protect, createDeliveryDetails);

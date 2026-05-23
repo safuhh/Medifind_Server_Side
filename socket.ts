@@ -19,6 +19,11 @@ export const initSocket = (httpServer: HttpServer, app: any) => {
       console.log(`User ${socket.id} joined room: ${id}`);
     });
 
+    socket.on("join_consultation_room", (roomId) => {
+      socket.join(roomId);
+      console.log(`User ${socket.id} joined consultation room: ${roomId}`);
+    });
+
     socket.on("join_seller_room", (sellerId) => {
       socket.join(sellerId);
       console.log(`Seller ${socket.id} joined room: ${sellerId}`);

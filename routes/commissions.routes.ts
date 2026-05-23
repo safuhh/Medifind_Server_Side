@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getCommissions } from "../controllers/commissions.controller.js";
+import { getCommissions } from "../controllers/admincontroller/commissions.controller.js";
 import { protect, authorizeRoles } from "../middleware/auth.middleware.js";
 
 const router = Router();

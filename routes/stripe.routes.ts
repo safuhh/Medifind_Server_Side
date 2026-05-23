@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createStripeConnectAccount } from "../controllers/stripe.controller.js";
+import { createStripeConnectAccount } from "../controllers/usercontrollers/stripe.controller.js";
 import { protect, authorizeRoles } from "../middleware/auth.middleware.js";
 
 const router = Router();

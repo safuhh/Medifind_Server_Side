@@ -5,7 +5,7 @@ import {
   acceptOrder,
   pickupOrder,
   deliverOrder
-} from "../controllers/deliveryOrder.controller.js";
+} from "../controllers/deliveryboycontroller/deliveryOrder.controller.js";
 import { protect, authorizeRoles } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
