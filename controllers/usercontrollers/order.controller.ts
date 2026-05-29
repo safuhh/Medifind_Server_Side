@@ -242,6 +242,7 @@ export const checkoutCart = async (req: Request, res: Response) => {
       deliveryPartnerEarnings,
       paymentStatus: "pending",
       orderStatus: "pending",
+      statusHistory: [{ status: "pending", timestamp: new Date() }],
       isBuyNow,
       splitFulfillmentId,
     });
@@ -338,7 +339,19 @@ export const confirmOrderPayment = async (req: Request, res: Response) => {
     // Update order status
     order.paymentStatus = "paid";
     order.orderStatus = "confirmed";
+    if (!order.statusHistory) {
+      order.statusHistory = [{ status: "pending", timestamp: order.createdAt || new Date() }];
+    }
+    order.statusHistory.push({ status: "confirmed", timestamp: new Date() });
     await order.save();
+
+    const io = req.app.get("io");
+    if (io) {
+      io.to(order.userId.toString()).emit("order_status_update", {
+        orderId: order._id,
+        status: "confirmed"
+      });
+    }
 
     // If order was placed via an AI split fulfillment plan, confirm it in the microservice
     if (order.splitFulfillmentId) {
@@ -360,7 +373,6 @@ export const confirmOrderPayment = async (req: Request, res: Response) => {
     // The split amounts are still calculated and stored in the order model.
 
     // Decrease the stock for each medicine
-    const io = req.app.get("io");
     for (const item of order.items) {
       const updatedMedicine = await Medicine.findByIdAndUpdate(
         item.medicineId,
@@ -394,6 +406,11 @@ export const confirmOrderPayment = async (req: Request, res: Response) => {
         io.to(sellerId).emit("new_order_received", {
           orderId: order._id,
         });
+      });
+      
+      // Notify delivery boys
+      io.emit("new_order_available", {
+        orderId: order._id,
       });
     }
 

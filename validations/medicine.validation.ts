@@ -5,7 +5,23 @@ export const createMedicineSchema = Joi.object({
     "string.empty": "Medicine name is required",
   }),
   brand: Joi.string().allow("").optional(),
-  category: Joi.string().allow("").optional(),
+  category: Joi.string()
+    .valid(
+      "pain relief",
+      "antibiotics",
+      "diabetes",
+      "cardiology",
+      "skin care",
+      "vitamins",
+      "baby care",
+      "respiratory",
+      "other"
+    )
+    .required()
+    .messages({
+      "any.only": "Invalid category selected",
+      "string.empty": "Category is required",
+    }),
   unitWeight: Joi.string().allow("").optional(),
   manufacturer: Joi.string().allow("").optional(),
   stock: Joi.any().optional(),

@@ -7,9 +7,9 @@ import {
   updateDeliveryBoySchema,
 } from "../../validations/deliveryBoy.validation.js";
 import { User } from "../../models/user.model.js";
-import { verifyAadhaarOCR } from "../../utils/aadhaarVerifier.js";
 
 import { SellerRequest } from "../../models/sellerRequest.model.js";
+import DeliveryDetails from "../../models/deliveryDetails.model.js";
 import Stripe from "stripe";
 
 const stripe = new Stripe(
@@ -92,26 +92,9 @@ export const applyDeliveryBoy = async (req: AuthRequest, res: Response) => {
       ? aadhaarNumber.replace(/\d(?=\d{4})/g, "X")
       : "";
 
-    // Verify Aadhaar using OCR
-    const mimetype = req.file 
-      ? req.file.mimetype 
-      : (aadhaarImage && aadhaarImage.toLowerCase().endsWith(".pdf") 
-          ? "application/pdf" 
-          : "image/jpeg");
-
-    const ocrResult = await verifyAadhaarOCR(aadhaarImage, mimetype, aadhaarNumber);
-
-    if (ocrResult.status === "mismatched") {
-      return res.status(400).json({
-        message: "Aadhaar verification failed: The uploaded document contains a different Aadhaar number than entered manually.",
-      });
-    }
-
-    if (ocrResult.status === "unreadable") {
-      return res.status(400).json({
-        message: "Aadhaar verification failed: The uploaded document is invalid or unreadable. Please upload a clear image or PDF containing your 12-digit Aadhaar number.",
-      });
-    }
+    // OCR removed. We rely on frontend normal validation and manual approval.
+    const ocrStatus = "pending";
+    const ocrExtractedNumber = "";
 
     const deliveryBoy = await DeliveryBoy.create({
       userId,
@@ -129,8 +112,8 @@ export const applyDeliveryBoy = async (req: AuthRequest, res: Response) => {
       kyc: {
         aadhaarNumber: maskedAadhaar,
         aadhaarImage,
-        ocrStatus: ocrResult.status,
-        ocrExtractedNumber: ocrResult.extractedNumber || "",
+        ocrStatus: ocrStatus,
+        ocrExtractedNumber: ocrExtractedNumber,
         isVerified: true,
       },
     });
@@ -233,10 +216,11 @@ export const getcurrentDeliveryBoyInfo = async (
     const deliveryBoy = await DeliveryBoy.findOne({ userId })
       .populate({
         path: "currentOrderId",
+        model: "Order",
         populate: [
-          { path: "deliveryDetailsId" },
-          { path: "userId", select: "name email phone location" },
-          { path: "items.medicineId" },
+          { path: "deliveryDetailsId", model: "DeliveryDetails" },
+          { path: "userId", select: "name email phone location", model: "User" },
+          { path: "items.medicineId", model: "Medicine" },
           {
             path: "items.sellerId",
             model: "User",

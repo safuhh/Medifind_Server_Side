@@ -76,6 +76,27 @@ export const getAllMedicines = async (req: Request, res: Response) => {
       });
     }
 
+    if (req.query.categories && typeof req.query.categories === "string" && req.query.categories.trim() !== "") {
+      const catArray = req.query.categories.split(",").flatMap(c => {
+        const cat = c.trim().toLowerCase();
+        const matches = [new RegExp(`^${cat}$`, "i")];
+        
+        // Handle legacy/inconsistent database values
+        if (cat === "pain relief") matches.push(new RegExp(`^pain$`, "i"));
+        if (cat === "antibiotics") matches.push(new RegExp(`^antibiotic$`, "i"));
+        if (cat === "other") {
+          matches.push(new RegExp(`^syrup$`, "i"));
+          matches.push(new RegExp(`^tablet$`, "i"));
+        }
+        
+        return matches;
+      });
+
+      pipeline.push({
+        $match: { category: { $in: catArray } }
+      });
+    }
+
     pipeline.push({ $sort: { createdAt: -1 } });
 
     const isDoctorSearchWithLocation = isDoctor && lat && lng;

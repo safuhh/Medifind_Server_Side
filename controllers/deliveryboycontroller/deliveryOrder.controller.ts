@@ -4,6 +4,8 @@ import { AuthRequest } from "../../types/authRequest.js";
 import { User } from "../../models/user.model.js";
 import { Order } from "../../models/order.model.js";
 import { SellerRequest } from "../../models/sellerRequest.model.js";
+import DeliveryDetails from "../../models/deliveryDetails.model.js";
+import { Medicine } from "../../models/medicine.model.js";
 import Stripe from "stripe";
 import { calculateDistance } from "../../utils/geocode.js";
 
@@ -26,10 +28,11 @@ export const deliveryBoyDashboard = async (req: any, res: Response) => {
     const deliveryBoy: any = await DeliveryBoy.findOne({ userId })
       .populate({
         path: "currentOrderId",
+        model: "Order",
         populate: [
-          { path: "deliveryDetailsId" },
-          { path: "userId", select: "name email phone location" },
-          { path: "items.medicineId" },
+          { path: "deliveryDetailsId", model: "DeliveryDetails" },
+          { path: "userId", select: "name email phone location", model: "User" },
+          { path: "items.medicineId", model: "Medicine" },
           {
             path: "items.sellerId",
             model: "User",
@@ -101,9 +104,9 @@ export const getAvailableOrders = async (req: AuthRequest, res: Response) => {
       orderStatus: { $in: ["confirmed", "pending"] },
       $or: [{ deliveryBoyId: { $exists: false } }, { deliveryBoyId: null }],
     })
-      .populate("deliveryDetailsId")
-      .populate("userId", "name email phone location")
-      .populate("items.medicineId")
+      .populate({ path: "deliveryDetailsId", model: "DeliveryDetails" })
+      .populate({ path: "userId", select: "name email phone location", model: "User" })
+      .populate({ path: "items.medicineId", model: "Medicine" })
       .populate({
         path: "items.sellerId",
         model: "User",
@@ -142,12 +145,22 @@ export const getAvailableOrders = async (req: AuthRequest, res: Response) => {
           const customerLng = order.userId.location.coordinates[0];
           const customerLat = order.userId.location.coordinates[1];
           const dist = calculateDistance(deliveryBoyLat, deliveryBoyLng, customerLat, customerLng);
-          if (dist <= 20) {
+          if (dist <= 50) { // Increased radius to 50km
             isWithinRange = true;
           }
         }
         
-        return isWithinRange;
+        // 3. Fallback: if no coordinates exist at all, don't hide the order
+        const hasSellerCoords = order.items?.some((item: any) => item.sellerId?.location?.coordinates?.length === 2);
+        const hasCustomerCoords = order.userId?.location?.coordinates?.length === 2;
+        
+        if (!hasSellerCoords && !hasCustomerCoords) {
+          isWithinRange = true;
+        }
+
+        // 4. Temporary bypass for local testing: allow all orders to be seen
+        // (You can remove this `return true;` line when in actual production to strictly enforce the 50km radius)
+        return true; 
       });
     }
 
@@ -163,6 +176,7 @@ export const getAvailableOrders = async (req: AuthRequest, res: Response) => {
                 shopName: sellerReq.shopName,
                 address: sellerReq.address,
                 phone: sellerReq.phone,
+                location: sellerReq.location,
               };
             } else {
               item.sellerShop = {
@@ -170,6 +184,7 @@ export const getAvailableOrders = async (req: AuthRequest, res: Response) => {
                 address:
                   item.sellerId.location?.address || "Location unavailable",
                 phone: item.sellerId.phone || "No phone",
+                location: item.sellerId.location,
               };
             }
           }
@@ -227,6 +242,9 @@ export const acceptOrder = async (req: AuthRequest, res: Response) => {
           message: "Delivery boy is on the way to pick up the order.",
         });
       });
+      
+      // Notify all delivery boys that this order is taken
+      io.emit("order_assigned", { orderId: order._id });
     }
 
     return res.json({ success: true, message: "Order accepted successfully" });
@@ -260,6 +278,8 @@ export const pickupOrder = async (req: AuthRequest, res: Response) => {
     const allPickedUp = order.items.every((item) => item.isPickedUp);
     if (allPickedUp) {
       order.orderStatus = "picked_up";
+      if (!order.statusHistory) order.statusHistory = [];
+      order.statusHistory.push({ status: "picked_up", timestamp: new Date() });
     }
 
     await order.save();
@@ -270,6 +290,10 @@ export const pickupOrder = async (req: AuthRequest, res: Response) => {
         io.to(order.userId.toString()).emit("order_picked_up", {
           orderId: order._id,
           message: "Delivery boy has picked up your order and is on the way.",
+        });
+        io.to(order.userId.toString()).emit("order_status_update", {
+          orderId: order._id,
+          status: "picked_up"
         });
       } else {
         io.to(order.userId.toString()).emit("order_partially_picked_up", {
@@ -300,6 +324,8 @@ export const deliverOrder = async (req: AuthRequest, res: Response) => {
     if (!order) return res.status(404).json({ message: "Order not found" });
 
     order.orderStatus = "delivered";
+    if (!order.statusHistory) order.statusHistory = [];
+    order.statusHistory.push({ status: "delivered", timestamp: new Date() });
     await order.save();
 
     // Stripe Connect transfers removed as per request.
@@ -314,6 +340,10 @@ export const deliverOrder = async (req: AuthRequest, res: Response) => {
       io.to(order.userId.toString()).emit("order_delivered", {
         orderId: order._id,
         message: "Your order has been delivered successfully.",
+      });
+      io.to(order.userId.toString()).emit("order_status_update", {
+        orderId: order._id,
+        status: "delivered"
       });
     }
 

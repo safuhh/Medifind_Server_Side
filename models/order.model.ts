@@ -23,6 +23,10 @@ export interface IOrder extends Document {
   stripeSessionId?: string;
   splitFulfillmentId?: string;
   orderStatus: "pending" | "confirmed" | "picked_up" | "delivered";
+  statusHistory: {
+    status: "pending" | "confirmed" | "picked_up" | "delivered";
+    timestamp: Date;
+  }[];
   deliveryBoyId?: Types.ObjectId;
   isBuyNow?: boolean;
   createdAt: Date;
@@ -61,6 +65,12 @@ const orderSchema = new Schema<IOrder>(
       enum: ["pending", "confirmed", "picked_up", "delivered"],
       default: "pending",
     },
+    statusHistory: [
+      {
+        status: { type: String, enum: ["pending", "confirmed", "picked_up", "delivered"] },
+        timestamp: { type: Date, default: Date.now },
+      },
+    ],
     deliveryBoyId: { type: Schema.Types.ObjectId, ref: "DeliveryBoy" },
     isBuyNow: { type: Boolean, default: false },
   },

@@ -57,6 +57,17 @@ const medicineSchema = new Schema<MedicineType>(
       required: true,
       trim: true,
       lowercase: true,
+      enum: [
+        "pain relief",
+        "antibiotics",
+        "diabetes",
+        "cardiology",
+        "skin care",
+        "vitamins",
+        "baby care",
+        "respiratory",
+        "other"
+      ],
     },
     unitWeight: { type: String, trim: true },
     composition: [
