@@ -9,9 +9,9 @@ export const protect = async (
   next: NextFunction,
 ) => {
   try {
-    let token: string | undefined;
+    let token: string | undefined = req.cookies.accessToken;
 
-    if (req.headers.authorization?.startsWith("Bearer")) {
+    if (!token && req.headers.authorization?.startsWith("Bearer")) {
       token = req.headers.authorization.split(" ")[1];
     }
 
@@ -76,9 +76,9 @@ export const optionalProtect = async (
   next: NextFunction,
 ) => {
   try {
-    let token: string | undefined;
+    let token: string | undefined = req.cookies.accessToken;
 
-    if (req.headers.authorization?.startsWith("Bearer")) {
+    if (!token && req.headers.authorization?.startsWith("Bearer")) {
       token = req.headers.authorization.split(" ")[1];
     }
 

@@ -69,6 +69,13 @@ export const googleAuth = async (req: Request, res: Response) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
+    res.cookie("accessToken", newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 1000,
+    });
+
     return res.json({
       user: {
         _id: user._id,
@@ -76,7 +83,6 @@ export const googleAuth = async (req: Request, res: Response) => {
         email: user.email,
         role: user.role,
       },
-      accessToken: newAccessToken,
     });
   } catch (err: any) {
     const googleError = err.response?.data || err.message;
@@ -113,8 +119,14 @@ export const refreshToken = async (req: Request, res: Response) => {
       { expiresIn: "15m" },
     );
 
+    res.cookie("accessToken", newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 15 * 60 * 1000,
+    });
+
     return res.json({
-      accessToken: newAccessToken,
       user: {
         _id: user._id,
         name: user.name,
@@ -177,7 +189,13 @@ export const logout = async (req: Request, res: Response) => {
     res.clearCookie("refreshToken", {
       httpOnly: true,
       sameSite: "lax",
-      secure: false,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+    });
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
       path: "/",
     });
 

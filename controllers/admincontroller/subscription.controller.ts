@@ -81,7 +81,7 @@ export const plans = {
           payment_method_types: ["card"],
           line_items: lineItems,
           mode: "payment",
-          success_url: `http://localhost:3000/stripe/success?session_id={CHECKOUT_SESSION_ID}&type=subscription`,
+          success_url: `http://localhost:3000/stripe/success?session_id={CHECKOUT_SESSION_ID}&type=subscription&plan_id=${plan.id}`,
           cancel_url:
             user.role === "seller"
               ? `http://localhost:3000/seller/add-medicine`
@@ -262,13 +262,8 @@ export const plans = {
         await subscription.save();
       }
 
-      // Automatically start the trial if they are a seller/doctor and haven't started yet
-      if (
-        (user.role === "seller" || user.role === "doctor") &&
-        !subscription.isPro &&
-        !subscription.trialStartedAt
-      ) {
-        subscription.trialStartedAt = new Date();
+      if (subscription.isPro && subscription.expiryDate && new Date(subscription.expiryDate) < new Date()) {
+        subscription.isPro = false;
         await subscription.save();
       }
 
