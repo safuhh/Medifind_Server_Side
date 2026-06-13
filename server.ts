@@ -57,7 +57,7 @@ app.get("/", (req, res) => {
 });
 
 // Use central router
-app.use("/", mainRouter);
+app.use("/api", mainRouter);
 
 // Serve static files
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
