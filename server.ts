@@ -49,6 +49,12 @@ app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
   next();
 });
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Medifind API Running Successfully 🚀",
+  });
+});
 
 // Use central router
 app.use("/", mainRouter);
