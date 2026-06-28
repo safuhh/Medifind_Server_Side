@@ -284,21 +284,35 @@ export class FulfillmentService {
           }
         }
 
-        // Prioritize maximum coverage first, then minimum distance as a tie-breaker, then lowest total cost
-        const isBetterCoverage = coverage.length > bestCoverage.length;
-        const isSameCoverageBetterDistance =
-          coverage.length === bestCoverage.length &&
-          distance < bestPharmacyDistance;
-        const isSameCoverageSameDistanceBetterCost =
-          coverage.length === bestCoverage.length &&
-          distance === bestPharmacyDistance &&
-          totalCostForMatched < bestPharmacyCost;
+        // Prioritize local pharmacies (e.g., within 20km)
+        const LOCAL_RADIUS_KM = 20;
+        const isCurrentLocal = distance <= LOCAL_RADIUS_KM;
+        const isBestLocal = bestPharmacyDistance <= LOCAL_RADIUS_KM;
 
-        if (
-          isBetterCoverage ||
-          isSameCoverageBetterDistance ||
-          isSameCoverageSameDistanceBetterCost
-        ) {
+        let isBetter = false;
+
+        if (isCurrentLocal && !isBestLocal) {
+          isBetter = true;
+        } else if (!isCurrentLocal && isBestLocal) {
+          isBetter = false;
+        } else {
+          // Both are local or both are remote. Prioritize coverage, then distance, then cost.
+          const isBetterCoverage = coverage.length > bestCoverage.length;
+          const isSameCoverageBetterDistance =
+            coverage.length === bestCoverage.length &&
+            distance < bestPharmacyDistance;
+          const isSameCoverageSameDistanceBetterCost =
+            coverage.length === bestCoverage.length &&
+            distance === bestPharmacyDistance &&
+            totalCostForMatched < bestPharmacyCost;
+
+          isBetter =
+            isBetterCoverage ||
+            isSameCoverageBetterDistance ||
+            isSameCoverageSameDistanceBetterCost;
+        }
+
+        if (isBetter) {
           bestCoverage = coverage;
           bestPharmacyId = pharmacyId;
           bestPharmacyName = pharmacyName;
@@ -536,19 +550,34 @@ export class FulfillmentService {
           bestDistance = distNum;
           bestCost = totalCostForMatched;
         } else {
-          const isBetterCoverage = coverage.length > bestCoverage.length;
-          const isSameCoverageBetterDistance =
-            coverage.length === bestCoverage.length && distNum < bestDistance;
-          const isSameCoverageSameDistanceBetterCost =
-            coverage.length === bestCoverage.length &&
-            distNum === bestDistance &&
-            totalCostForMatched < bestCost;
+          // Prioritize local pharmacies (e.g., within 20km)
+          const LOCAL_RADIUS_KM = 20;
+          const isCurrentLocal = distNum <= LOCAL_RADIUS_KM;
+          const isBestLocal = bestDistance <= LOCAL_RADIUS_KM;
 
-          if (
-            isBetterCoverage ||
-            isSameCoverageBetterDistance ||
-            isSameCoverageSameDistanceBetterCost
-          ) {
+          let isBetter = false;
+
+          if (isCurrentLocal && !isBestLocal) {
+            isBetter = true;
+          } else if (!isCurrentLocal && isBestLocal) {
+            isBetter = false;
+          } else {
+            // Both are local or both are remote
+            const isBetterCoverage = coverage.length > bestCoverage.length;
+            const isSameCoverageBetterDistance =
+              coverage.length === bestCoverage.length && distNum < bestDistance;
+            const isSameCoverageSameDistanceBetterCost =
+              coverage.length === bestCoverage.length &&
+              distNum === bestDistance &&
+              totalCostForMatched < bestCost;
+
+            isBetter =
+              isBetterCoverage ||
+              isSameCoverageBetterDistance ||
+              isSameCoverageSameDistanceBetterCost;
+          }
+
+          if (isBetter) {
             bestPharmacy = pharmacy;
             bestCoverage = coverage;
             bestDistance = distNum;

@@ -13,7 +13,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
 
 export const bookSlot = async (req: any, res: Response) => {
   try {
-    const { doctorId, date, timeSlot, reason } = req.body;
+    const { doctorId, date, timeSlot, reason, familyMemberId } = req.body;
     const userId = req.user?.id;
 
     if (!userId) {
@@ -63,7 +63,7 @@ export const bookSlot = async (req: any, res: Response) => {
         amount: fee * 100,
         currency: "inr",
         payment_method_types: ["card"],
-        metadata: { doctorId, userId, date, timeSlot, reason },
+        metadata: { doctorId, userId, date, timeSlot, reason, familyMemberId: familyMemberId || "self" },
       });
     } catch (stripeError: any) {
       console.error("STRIPE INTENT ERROR:", stripeError.message);
@@ -90,6 +90,7 @@ export const bookSlot = async (req: any, res: Response) => {
       amount: fee,
       stripeSessionId: paymentIntent.id,
       paymentStatus: "pending",
+      ...(familyMemberId && familyMemberId !== "self" ? { familyMemberId } : {}),
     });
 
     // Emit socket event

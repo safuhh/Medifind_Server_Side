@@ -21,6 +21,7 @@ interface IFulfillmentSplit {
 export interface IFulfillment extends Document {
   prescriptionId: string;
   patientId: string;
+  familyMemberId?: string;
   originalMedicines: string[];
   splits: IFulfillmentSplit[];
   unavailableMedicines?: string[];
@@ -38,6 +39,10 @@ const FulfillmentSchema = new Schema<IFulfillment>({
   patientId: {
     type: String,
     required: true,
+    index: true,
+  },
+  familyMemberId: {
+    type: String,
     index: true,
   },
   originalMedicines: [{

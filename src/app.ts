@@ -15,6 +15,7 @@ import availabilityRoutes from "./routes/doctor.availability.routes.js";
 import consultationroutes from "./routes/consultation.routes.js";
 import blockDoctorRoutes from "./routes/block.doctor.routes.js";
 import healthReportRoutes from "./routes/healthReport.routes.js";
+import searchHistoryRoutes from "./routes/searchHistory.routes.js";
 import cartRoutes from "./routes/cart.routes.js";
 import deliveryDetailsRoutes from "./routes/DeliveryDetails.routes.js";
 import orderRoutes from "./routes/order.routes.js";
@@ -27,6 +28,7 @@ import doctorRevenueRoutes from "./routes/doctor.revenu.routes.js";
 import doctorGetRoutes from "./routes/doctor.get.routes.js";
 import subscriptionRoutes from "./routes/subscription.routes.js";
 import mostsellingproductroutes from "./routes/mostsellingproducts.js";
+import familyRoutes from "./routes/family.routes.js";
 const router = express.Router();
 
 router.use("/doctor", doctorRoutes);
@@ -45,6 +47,7 @@ router.use("/admin/deliveryboy", blockDeliveryBoyRoutes);
 router.use("/consultation", consultationroutes);
 router.use("/admin/doctor", blockDoctorRoutes);
 router.use("/health-report", healthReportRoutes);
+router.use("/search-history", searchHistoryRoutes);
 router.use("/cart", cartRoutes);
 router.use("/delivery-details", deliveryDetailsRoutes);
 router.use("/orders", orderRoutes);
@@ -57,11 +60,14 @@ router.use("/doctor-revenue", doctorRevenueRoutes);
 router.use("/doctor-get", doctorGetRoutes);
 router.use("/subscriptions", subscriptionRoutes);
 router.use("/mostsellingproduct",mostsellingproductroutes)
+router.use("/family", familyRoutes);
 
 import fulfillmentRoutes from "./routes/ai/fulfillment.routes.js";
 import pharmacyRoutes from "./routes/ai/pharmacy.routes.js";
+import familyChatRoutes from "./routes/ai/familyChat.routes.js";
 
 router.use("/ai/fulfillment", fulfillmentRoutes);
 router.use("/ai/pharmacy", pharmacyRoutes);
+router.use("/ai/family", familyChatRoutes);
 
 export default router;

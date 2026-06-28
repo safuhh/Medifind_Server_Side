@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IDoctorBooking extends Document {
   doctorId: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
+  familyMemberId?: mongoose.Types.ObjectId;
   date: Date;
   timeSlot: string;
   status: "pending" | "confirmed" | "cancelled";
@@ -25,6 +26,10 @@ const DoctorBookingSchema: Schema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+    familyMemberId: {
+      type: Schema.Types.ObjectId,
+      ref: "FamilyMember",
     },
     date: {
       type: Date,

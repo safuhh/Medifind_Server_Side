@@ -102,12 +102,16 @@ export const getAllMedicines = async (req: Request, res: Response) => {
 
     const hasLocation = lat && lng && !isNaN(Number(lat)) && !isNaN(Number(lng));
 
+    if (req.query.radius && !hasLocation) {
+        return res.status(200).json({ success: true, medicines: [] });
+    }
+
     if (hasLocation) {
       pipeline.push({ $sort: { createdAt: -1 } });
 
       const allMedicines = await Medicine.aggregate(pipeline);
 
-      const MAX_DISTANCE_KM = 100;
+      const MAX_DISTANCE_KM = req.query.radius ? Number(req.query.radius) : 100;
 
       let results = allMedicines.map((med: any) => {
         const shop = med.shop;
@@ -129,7 +133,7 @@ export const getAllMedicines = async (req: Request, res: Response) => {
       });
 
       results = results.filter(
-        (med: any) => med.shop?.distance === null || med.shop?.distance <= MAX_DISTANCE_KM
+        (med: any) => med.shop?.distance != null && med.shop?.distance <= MAX_DISTANCE_KM
       );
 
       results.sort(

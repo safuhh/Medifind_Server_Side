@@ -58,6 +58,7 @@ export const createHealthReport = async (req: any, res: Response) => {
       {
         doctorId: doctor._id,
         patientId: booking.userId,
+        familyMemberId: booking.familyMemberId,
         notes,
         medicines,
       },

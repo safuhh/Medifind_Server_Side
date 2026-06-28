@@ -12,6 +12,7 @@ export interface IOrderItem {
 
 export interface IOrder extends Document {
   userId: Types.ObjectId;
+  familyMemberId?: Types.ObjectId;
   deliveryDetailsId: Types.ObjectId;
   items: IOrderItem[];
   totalAmount: number;
@@ -46,6 +47,7 @@ const orderItemSchema = new Schema<IOrderItem>({
 const orderSchema = new Schema<IOrder>(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    familyMemberId: { type: Schema.Types.ObjectId, ref: "FamilyMember" },
     deliveryDetailsId: { type: Schema.Types.ObjectId, ref: "DeliveryDetails", required: true },
     items: [orderItemSchema],
     totalAmount: { type: Number, required: true },

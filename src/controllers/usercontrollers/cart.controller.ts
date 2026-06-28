@@ -14,38 +14,39 @@ export const getRemainingPrescribedQty = async (userId: string, medicineId: stri
     return undefined;
   }
 
-  if (!targetMedicine.isPrescriptionRequired) {
-    return undefined;
-  }
-
-  const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const searchNames = [targetMedicine.name];
   if (targetMedicine.genericName) {
     searchNames.push(targetMedicine.genericName);
   }
-  
-  const nameRegexes = searchNames.map(name => new RegExp("^" + escapeRegExp(name) + "$", "i"));
 
-  const latestReport = await HealthReport.findOne({
-    patientId: userId,
-    $or: [
-      { "medicines.medicineId": medicineId },
-      { "medicines.name": { $in: nameRegexes } }
-    ]
-  }).sort({ createdAt: -1 });
+  // Fetch all user reports to find the latest matching prescription
+  const reports = await HealthReport.find({ patientId: userId }).sort({ createdAt: -1 });
+  let latestReport = null;
+  let medItem = null;
 
-  if (!latestReport) {
-    return undefined;
+  for (const report of reports) {
+    medItem = (report.medicines || []).find(m => {
+      if (m.medicineId && m.medicineId.toString() === medicineId.toString()) return true;
+      
+      const reportMedName = m.name?.trim().toLowerCase();
+      if (!reportMedName) return false;
+
+      // Fuzzy matching: if one name contains the other
+      return searchNames.some(name => {
+        const sName = name.trim().toLowerCase();
+        return reportMedName.includes(sName) || sName.includes(reportMedName);
+      });
+    });
+
+    if (medItem) {
+      latestReport = report;
+      break;
+    }
   }
 
-  const medItem = (latestReport.medicines || []).find(m => {
-    if (m.medicineId && m.medicineId.toString() === medicineId.toString()) return true;
-    const reportMedName = m.name?.toLowerCase();
-    return reportMedName && searchNames.some(name => reportMedName === name.toLowerCase());
-  });
-
-  if (!medItem) {
-    return undefined;
+  if (!latestReport || !medItem) {
+    // If Rx required, return 0 (blocked). Else undefined (unlimited).
+    return targetMedicine.isPrescriptionRequired ? 0 : undefined;
   }
   const prescribedLimit = medItem.quantity;
 
@@ -294,5 +295,26 @@ export const getCart = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error getting cart:", error);
     return res.status(500).json({ success: false, message: "Failed to get cart" });
+  }
+};
+
+export const checkRemainingPrescribedQty = async (req: Request, res: Response) => {
+  try {
+    const { medicineId } = req.params;
+    const userId = (req as any).user.id;
+
+    if (!medicineId) {
+      return res.status(400).json({ success: false, message: "Medicine ID is required" });
+    }
+
+    const remainingLimit = await getRemainingPrescribedQty(userId, medicineId as string);
+
+    return res.status(200).json({
+      success: true,
+      remainingLimit
+    });
+  } catch (error) {
+    console.error("Error checking remaining prescribed quantity:", error);
+    return res.status(500).json({ success: false, message: "Failed to check remaining quantity" });
   }
 };

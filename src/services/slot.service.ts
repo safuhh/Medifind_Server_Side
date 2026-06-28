@@ -52,19 +52,12 @@ export const getAvailblitySlots = async (
     if (isToday) {
         const now = dayjs();
         filteredSlots = allBaseSlots.filter(slot => {
-            // Parse slot time (e.g. "10:00 AM")
-            const parts = slot.split(" ");
-            if (!parts[0] || !parts[1]) return false;
-            const timeParts = parts[0].split(":");
+            const timeParts = slot.split(":");
             if (!timeParts[0] || !timeParts[1]) return false;
-            let hours = parseInt(timeParts[0]);
+            const hours = parseInt(timeParts[0]);
             const minutes = parseInt(timeParts[1]);
-            const modifier = parts[1];
             
-            if (modifier === "PM" && hours < 12) hours += 12;
-            if (modifier === "AM" && hours === 12) hours = 0;
-            
-            const slotTime = dayjs(date).startOf("day").add(hours, "hour").add(minutes, "minute");
+            const slotTime = dayjs(date).startOf("day").hour(hours).minute(minutes);
             return slotTime.isAfter(now);
         });
     }

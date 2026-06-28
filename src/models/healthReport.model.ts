@@ -4,7 +4,9 @@ export interface IHealthReport extends Document {
   bookingId: Types.ObjectId;
   doctorId: Types.ObjectId;
   patientId: Types.ObjectId;
+  familyMemberId?: Types.ObjectId;
   notes: string;
+  diagnosisText?: string;
   medicines: Array<{
     medicineId: Types.ObjectId;
     name: string;
@@ -22,7 +24,9 @@ const HealthReportSchema = new Schema<IHealthReport>(
     bookingId: { type: Schema.Types.ObjectId, ref: "DoctorBooking", required: true },
     doctorId: { type: Schema.Types.ObjectId, ref: "DoctorApplication", required: true },
     patientId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    familyMemberId: { type: Schema.Types.ObjectId, ref: "FamilyMember" },
     notes: { type: String, required: true },
+    diagnosisText: { type: String },
     medicines: [
       {
         medicineId: { type: Schema.Types.ObjectId, ref: "Medicine", required: true },

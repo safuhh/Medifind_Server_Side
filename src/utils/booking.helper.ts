@@ -35,6 +35,7 @@ export const createConsultationForBooking = async (booking: any) => {
   return await Consultation.create({
     doctorId: booking.doctorId,
     patientId: userId,
+    familyMemberId: booking.familyMemberId,
     bookingId: booking._id,
     roomId: roomId,
     scheduledAt: scheduledAt,

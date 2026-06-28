@@ -7,6 +7,8 @@ export interface IConsultation extends Document {
 
   bookingId?: mongoose.Types.ObjectId;
 
+  familyMemberId?: mongoose.Types.ObjectId;
+
   roomId: string;
 
   status: "scheduled" | "active" | "completed" | "cancelled";
@@ -34,6 +36,11 @@ const consultationSchema = new Schema<IConsultation>(
     bookingId: {
       type: Schema.Types.ObjectId,
       ref: "DoctorBooking",
+    },
+
+    familyMemberId: {
+      type: Schema.Types.ObjectId,
+      ref: "FamilyMember",
     },
 
     roomId: {
