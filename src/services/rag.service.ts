@@ -64,30 +64,41 @@ export class RAGService {
       }
     }
 
-    // 3. Generate query embedding
-    const queryEmbedding = await EmbeddingService.generateEmbedding(message);
+    // 3. Simple Intent Classification
+    const casualGreetingsRegex = /^(hi|hello|hey|how are you\??|good morning|good afternoon|good evening|thanks|thank you|thanks a lot|bye|goodbye)$/i;
+    const isCasualChat = casualGreetingsRegex.test(message.trim());
 
-    // 4. Semantic search on the user's health data chunks
-    const searchParams: any = {
-      queryEmbedding,
-      primaryUserId: userId,
-      topK: 8,
-    };
-    if (familyMemberId) searchParams.familyMemberId = familyMemberId;
-    if (linkedUserId) searchParams.linkedUserId = linkedUserId;
+    let contextText = "";
+    let citations: ContextChunk[] = [];
 
-    const retrievedChunks = await EmbeddingService.semanticSearch(searchParams);
+    if (!isCasualChat) {
+      // 4. Generate query embedding
+      const queryEmbedding = await EmbeddingService.generateEmbedding(message);
 
-    // 5. Build structured context from chunks + direct DB queries
-    const contextParams: any = {
-      primaryUserId: userId,
-      retrievedChunks,
-    };
-    if (familyMemberId) contextParams.familyMemberId = familyMemberId;
-    if (linkedUserId) contextParams.linkedUserId = linkedUserId;
-    if (memberName) contextParams.memberName = memberName;
+      // 5. Semantic search on the user's health data chunks
+      const searchParams: any = {
+        queryEmbedding,
+        primaryUserId: userId,
+        topK: 8,
+      };
+      if (familyMemberId) searchParams.familyMemberId = familyMemberId;
+      if (linkedUserId) searchParams.linkedUserId = linkedUserId;
 
-    const { contextText, citations } = await ContextBuilderService.buildContext(contextParams);
+      const retrievedChunks = await EmbeddingService.semanticSearch(searchParams);
+
+      // 6. Build structured context from chunks + direct DB queries
+      const contextParams: any = {
+        primaryUserId: userId,
+        retrievedChunks,
+      };
+      if (familyMemberId) contextParams.familyMemberId = familyMemberId;
+      if (linkedUserId) contextParams.linkedUserId = linkedUserId;
+      if (memberName) contextParams.memberName = memberName;
+
+      const builtContext = await ContextBuilderService.buildContext(contextParams);
+      contextText = builtContext.contextText;
+      citations = builtContext.citations;
+    }
 
     // 6. Build conversation history (last 6 messages for context window efficiency)
     const recentMessages = session.messages.slice(-6);
