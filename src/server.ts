@@ -26,11 +26,21 @@ app.use(
     crossOriginResourcePolicy: { policy: "cross-origin" },
   }),
 );
+const allowedOrigins = [
+  "https://medifind-client-side.vercel.app",
+];
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "https://medifind-client-side.vercel.app",
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
-  }),
+  })
 );
 
 app.use(express.json({ limit: "50mb" }));
