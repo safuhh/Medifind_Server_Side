@@ -39,7 +39,7 @@ export const createSearchRecord = async (req: any, res: Response) => {
       searchQuery: searchQuery.trim(),
       createdAt: { $gte: fifteenMinutesAgo }
     };
-    const existingRecord = await SearchHistory.findOne(existingRecordQuery);
+    const existingRecord = await SearchHistory.findOne(existingRecordQuery as any);
 
     if (existingRecord) {
       existingRecord.timestamp = new Date();
@@ -123,7 +123,7 @@ export const getSearchHistory = async (req: any, res: Response) => {
       sortOption = { availablePharmaciesFound: -1 };
     }
 
-    const searchRecords = await SearchHistory.find(filterQuery)
+    const searchRecords = await SearchHistory.find(filterQuery as any)
       .sort(sortOption)
       .skip(skip)
       .limit(limit);
@@ -157,7 +157,7 @@ export const toggleFavoriteSearch = async (req: any, res: Response) => {
     }
 
     const filter = { _id: id, userId };
-    const record = await SearchHistory.findOne(filter);
+    const record = await SearchHistory.findOne(filter as any);
     if (!record) {
       return res.status(404).json({ success: false, message: "Search history record not found." });
     }
@@ -183,7 +183,7 @@ export const deleteSearchRecord = async (req: any, res: Response) => {
     }
 
     const filter = { _id: id, userId };
-    const record = await SearchHistory.findOneAndDelete(filter);
+    const record = await SearchHistory.findOneAndDelete(filter as any);
     if (!record) {
       return res.status(404).json({ success: false, message: "Search history record not found." });
     }
