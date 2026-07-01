@@ -11,6 +11,7 @@ import mainRouter from "./app.js";
 import { initSocket } from "./sockets/socket.js";
 
 const app = express();
+app.set("trust proxy", 1);
 const httpServer = createServer(app);
 
 // Initialize Socket.io

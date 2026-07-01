@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { SearchHistory, SearchHistoryType } from "../models/searchHistory.model.js";
-import { FilterQuery } from "mongoose";
+import mongoose from "mongoose";
 
 // Save a new search history record
 export const createSearchRecord = async (req: any, res: Response) => {
@@ -34,7 +34,7 @@ export const createSearchRecord = async (req: any, res: Response) => {
 
     // Check if the user searched for the exact same medicine name/query in the last 15 minutes, update timestamp instead of duplicate records
     const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
-    const existingRecordQuery: FilterQuery<SearchHistoryType> = {
+    const existingRecordQuery = {
       userId,
       searchQuery: searchQuery.trim(),
       createdAt: { $gte: fifteenMinutesAgo }
@@ -90,7 +90,7 @@ export const getSearchHistory = async (req: any, res: Response) => {
     const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
     const skip = (page - 1) * limit;
 
-    const filterQuery: FilterQuery<SearchHistoryType> = { userId };
+    const filterQuery: Record<string, any> = { userId };
 
     if (category && category !== "") {
       filterQuery.medicineCategory = { $regex: new RegExp(`^${category}$`, "i") };
@@ -156,7 +156,7 @@ export const toggleFavoriteSearch = async (req: any, res: Response) => {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    const filter: FilterQuery<SearchHistoryType> = { _id: id, userId };
+    const filter = { _id: id, userId };
     const record = await SearchHistory.findOne(filter);
     if (!record) {
       return res.status(404).json({ success: false, message: "Search history record not found." });
@@ -182,7 +182,7 @@ export const deleteSearchRecord = async (req: any, res: Response) => {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    const filter: FilterQuery<SearchHistoryType> = { _id: id, userId };
+    const filter = { _id: id, userId };
     const record = await SearchHistory.findOneAndDelete(filter);
     if (!record) {
       return res.status(404).json({ success: false, message: "Search history record not found." });
