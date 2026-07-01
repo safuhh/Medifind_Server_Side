@@ -23,6 +23,8 @@ export interface SearchHistoryType extends Document {
   searchQuery: string;
   isFavorite: boolean;
   timestamp: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const searchHistorySchema = new Schema<SearchHistoryType>(
