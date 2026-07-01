@@ -60,7 +60,7 @@ export const plans = {
           .json({ success: false, message: "Invalid plan selected" });
       }
 
-      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+      const frontendUrl = process.env.FRONTEND_URL || "https://medifind-client-side.vercel.app";
       const lineItems = [
         {
           price_data: {
@@ -81,13 +81,13 @@ export const plans = {
           payment_method_types: ["card"],
           line_items: lineItems,
           mode: "payment",
-          success_url: `http://localhost:3000/stripe/success?session_id={CHECKOUT_SESSION_ID}&type=subscription&plan_id=${plan.id}`,
+          success_url: `https://medifind-client-side.vercel.app/stripe/success?session_id={CHECKOUT_SESSION_ID}&type=subscription&plan_id=${plan.id}`,
           cancel_url:
             user.role === "seller"
-              ? `http://localhost:3000/seller/add-medicine`
+              ? `https://medifind-client-side.vercel.app/seller/add-medicine`
               : user.role === "doctor"
-                ? `http://localhost:3000/doctor/availability`
-                : `http://localhost:3000/subcription`,
+                ? `https://medifind-client-side.vercel.app/doctor/availability`
+                : `https://medifind-client-side.vercel.app/subcription`,
           metadata: {
             userId: userId.toString(),
             planId: plan.id,

@@ -28,7 +28,7 @@ app.use(
 );
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: process.env.CLIENT_URL || "https://medifind-client-side.vercel.app",
     credentials: true,
   }),
 );

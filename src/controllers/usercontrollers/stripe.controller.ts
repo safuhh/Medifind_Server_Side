@@ -21,8 +21,8 @@ export const createStripeConnectAccount = async (req: Request, res: Response) =>
     // 2. Create an account link (URL) for the user to complete onboarding
     const accountLink = await stripe.accountLinks.create({
       account: account.id,
-      refresh_url: `${process.env.FRONTEND_URL || "http://localhost:3000"}/stripe/reauth`,
-      return_url: `${process.env.FRONTEND_URL || "http://localhost:3000"}/stripe/success`,
+      refresh_url: `${process.env.FRONTEND_URL || "https://medifind-client-side.vercel.app"}/stripe/reauth`,
+      return_url: `${process.env.FRONTEND_URL || "https://medifind-client-side.vercel.app"}/stripe/success`,
       type: "account_onboarding",
     });
 

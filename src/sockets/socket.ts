@@ -4,7 +4,7 @@ import { Server as HttpServer } from "http";
 export const initSocket = (httpServer: HttpServer, app: any) => {
   const io = new Server(httpServer, {
     cors: {
-      origin: process.env.CLIENT_URL || "http://localhost:3000",
+      origin: process.env.CLIENT_URL || "https://medifind-client-side.vercel.app",
       credentials: true,
     },
   });

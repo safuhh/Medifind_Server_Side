@@ -230,7 +230,7 @@ export const checkoutCart = async (req: Request, res: Response) => {
         .json({ success: false, message: "Valid items not found in cart" });
     }
 
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const frontendUrl = process.env.FRONTEND_URL || "https://medifind-client-side.vercel.app";
 
     // Create Order in DB with Payment Distribution Matrix
     const order = await Order.create({
